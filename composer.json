@@ -1,0 +1,13 @@
+{
+    "name": "php-pm/httpkernel-adapter",
+    "require": {
+        "stack/builder": "1.0.*",
+        "symfony/http-foundation": "2.6.*",
+        "symfony/http-kernel": "2.6.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "PHPPM\\": ""
+        }
+    }
+}
