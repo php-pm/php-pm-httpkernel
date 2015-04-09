@@ -41,7 +41,7 @@ class HttpKernel implements BridgeInterface
         if (false === class_exists($appBootstrap)) {
             $appBootstrap = '\\' . $appBootstrap;
             if (false === class_exists($appBootstrap)) {
-                return false;
+                throw new \RuntimeException('Could not find bootstrap class ' . $appBootstrap);
             }
         }
 
