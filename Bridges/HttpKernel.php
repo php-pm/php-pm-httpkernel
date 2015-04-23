@@ -36,7 +36,11 @@ class HttpKernel implements BridgeInterface
      */
     public function bootstrap($appBootstrap, $appenv)
     {
-        require_once './vendor/autoload.php';
+    	// include applications autoload
+        $autoloader = dirname(realpath($_SERVER['SCRIPT_NAME'])) . '/vendor/autoload.php';
+        if (file_exists($autoloader)) {
+        	require_once $autoloader;
+        }
 
         if (false === class_exists($appBootstrap)) {
             $appBootstrap = '\\' . $appBootstrap;
@@ -91,7 +95,7 @@ class HttpKernel implements BridgeInterface
                     $response->end();
                     return;
                 }
-                
+
                 self::mapResponse($response, $syResponse);
             }
         });
@@ -99,7 +103,7 @@ class HttpKernel implements BridgeInterface
 
     /**
      * Convert React\Http\Request to Symfony\Component\HttpFoundation\Request
-     * 
+     *
      * @param ReactRequest $reactRequest
      * @return SymfonyRequest $syRequest
      */
@@ -132,7 +136,7 @@ class HttpKernel implements BridgeInterface
 
     /**
      * Convert Symfony\Component\HttpFoundation\Response to React\Http\Response
-     * 
+     *
      * @param ReactResponse $reactResponse
      * @param SymfonyResponse $syResponse
      */
