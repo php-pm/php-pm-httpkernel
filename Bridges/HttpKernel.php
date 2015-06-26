@@ -10,6 +10,7 @@ use React\Http\Response as ReactResponse;
 use Stack\Builder;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse as SymfonyStreamedResponse;
 
 class HttpKernel implements BridgeInterface
 {
@@ -36,10 +37,10 @@ class HttpKernel implements BridgeInterface
      */
     public function bootstrap($appBootstrap, $appenv)
     {
-    	// include applications autoload
+        // include applications autoload
         $autoloader = dirname(realpath($_SERVER['SCRIPT_NAME'])) . '/vendor/autoload.php';
         if (file_exists($autoloader)) {
-        	require_once $autoloader;
+            require_once $autoloader;
         }
 
         if (false === class_exists($appBootstrap)) {
@@ -145,6 +146,18 @@ class HttpKernel implements BridgeInterface
     {
         $headers = $syResponse->headers->all();
         $reactResponse->writeHead($syResponse->getStatusCode(), $headers);
-        $reactResponse->end($syResponse->getContent());
+
+        // @TODO convert StreamedResponse in an async manner
+        if ($syResponse instanceof SymfonyStreamedResponse) {
+            ob_start();
+            $syResponse->sendContent();
+            $content = ob_get_contents();
+            ob_end_clean();
+        }
+        else {
+            $content = $syResponse->getContent();
+        }
+
+        $reactResponse->end($content);
     }
 }
