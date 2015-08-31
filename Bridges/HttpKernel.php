@@ -11,6 +11,7 @@ use Stack\Builder;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse as SymfonyStreamedResponse;
+use Symfony\Component\HttpKernel\TerminableInterface;
 
 class HttpKernel implements BridgeInterface
 {
@@ -98,6 +99,10 @@ class HttpKernel implements BridgeInterface
                 }
 
                 self::mapResponse($response, $syResponse);
+
+                if ($this->application instanceof TerminableInterface) {
+                    $this->application->terminate($syRequest, $syResponse);
+                }
             }
         });
     }
