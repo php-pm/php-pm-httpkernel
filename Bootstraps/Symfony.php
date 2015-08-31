@@ -32,6 +32,13 @@ class Symfony implements StackableBootstrapInterface
             require_once './app/AppKernel.php';
         }
 
+        $info = new \ReflectionClass('AppKernel');
+        $appDir = dirname($info->getFileName());
+        $symfonyAutoload = $appDir . '/autoload.php';
+        if (is_file($symfonyAutoload)) {
+            require_once $symfonyAutoload;
+        }
+
         $app = new \AppKernel($this->appenv, false);
         $app->loadClassCache();
 
