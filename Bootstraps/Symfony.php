@@ -3,7 +3,6 @@
 namespace PHPPM\Bootstraps;
 
 use Stack\Builder;
-use Symfony\Component\HttpKernel\HttpCache\Store;
 
 /**
  * A default bootstrap for the Symfony framework
