@@ -23,6 +23,7 @@ class Laravel implements StackableBootstrapInterface
 
     /**
      * Instantiate the bootstrap, storing the $appenv
+     * @param string|null $appenv The environment your application will use to bootstrap (if any)
      */
     public function __construct($appenv)
     {
