@@ -44,12 +44,7 @@ class HttpKernel implements BridgeInterface
             require_once $autoloader;
         }
 
-        if (false === class_exists($appBootstrap)) {
-            $appBootstrap = '\\' . $appBootstrap;
-            if (false === class_exists($appBootstrap)) {
-                throw new \RuntimeException('Could not find bootstrap class ' . $appBootstrap);
-            }
-        }
+        $appBootstrap = $this->normalizeAppBootstrap($appBootstrap);
 
         $bootstrap = new $appBootstrap($appenv);
 
@@ -164,5 +159,23 @@ class HttpKernel implements BridgeInterface
         }
 
         $reactResponse->end($content);
+    }
+
+    /**
+     * @param $appBootstrap
+     * @return string
+     * @throws \RuntimeException
+     */
+    protected function normalizeAppBootstrap($appBootstrap)
+    {
+        $appBootstrap = str_replace('\\\\', '\\', $appBootstrap);
+        if (false === class_exists($appBootstrap)) {
+            $appBootstrap = '\\' . $appBootstrap;
+            if (false === class_exists($appBootstrap)) {
+                throw new \RuntimeException('Could not find bootstrap class ' . $appBootstrap);
+            }
+            return $appBootstrap;
+        }
+        return $appBootstrap;
     }
 }
