@@ -18,7 +18,7 @@ class HttpKernel implements BridgeInterface
     /**
      * An application implementing the HttpKernelInterface
      *
-     * @var \Symfony\Component\HttpFoundation\HttpKernelInterface
+     * @var \Symfony\Component\HttpKernel\HttpKernelInterface
      */
     protected $application;
 
@@ -33,7 +33,7 @@ class HttpKernel implements BridgeInterface
      * be able to be autoloaded.
      *
      * @param string $appBootstrap The name of the class used to bootstrap the application
-     * @param string|null $appBootstrap The environment your application will use to bootstrap (if any)
+     * @param string|null $appenv The environment your application will use to bootstrap (if any)
      * @see http://stackphp.com
      */
     public function bootstrap($appBootstrap, $appenv)
@@ -44,12 +44,7 @@ class HttpKernel implements BridgeInterface
             require_once $autoloader;
         }
 
-        if (false === class_exists($appBootstrap)) {
-            $appBootstrap = '\\' . $appBootstrap;
-            if (false === class_exists($appBootstrap)) {
-                throw new \RuntimeException('Could not find bootstrap class ' . $appBootstrap);
-            }
-        }
+        $appBootstrap = $this->normalizeAppBootstrap($appBootstrap);
 
         $bootstrap = new $appBootstrap($appenv);
 
@@ -164,5 +159,23 @@ class HttpKernel implements BridgeInterface
         }
 
         $reactResponse->end($content);
+    }
+
+    /**
+     * @param $appBootstrap
+     * @return string
+     * @throws \RuntimeException
+     */
+    protected function normalizeAppBootstrap($appBootstrap)
+    {
+        $appBootstrap = str_replace('\\\\', '\\', $appBootstrap);
+        if (false === class_exists($appBootstrap)) {
+            $appBootstrap = '\\' . $appBootstrap;
+            if (false === class_exists($appBootstrap)) {
+                throw new \RuntimeException('Could not find bootstrap class ' . $appBootstrap);
+            }
+            return $appBootstrap;
+        }
+        return $appBootstrap;
     }
 }
