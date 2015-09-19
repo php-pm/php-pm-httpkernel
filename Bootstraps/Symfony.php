@@ -3,7 +3,6 @@
 namespace PHPPM\Bootstraps;
 
 use Stack\Builder;
-use Symfony\Component\HttpKernel\HttpCache\Store;
 
 /**
  * A default bootstrap for the Symfony framework
@@ -32,6 +31,8 @@ class Symfony implements StackableBootstrapInterface
             require_once './app/AppKernel.php';
         }
 
+        $this->includeAutoload();
+
         $app = new \AppKernel($this->appenv, false);
         $app->loadClassCache();
 
@@ -44,5 +45,23 @@ class Symfony implements StackableBootstrapInterface
     public function getStack(Builder $stack)
     {
         return $stack;
+    }
+
+    /**
+     * Includes the autoload file from the app directory, if available.
+     *
+     * The Symfony standard edition configures the annotation class loading
+     * in that file.
+     * The alternative bootstrap.php.cache cannot be included as that leads
+     * to "Cannot redeclare class" error, when starting php-pm.
+     */
+    protected function includeAutoload()
+    {
+        $info = new \ReflectionClass('AppKernel');
+        $appDir = dirname($info->getFileName());
+        $symfonyAutoload = $appDir . '/autoload.php';
+        if (is_file($symfonyAutoload)) {
+            require_once $symfonyAutoload;
+        }
     }
 }
