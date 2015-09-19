@@ -18,7 +18,7 @@ class HttpKernel implements BridgeInterface
     /**
      * An application implementing the HttpKernelInterface
      *
-     * @var \Symfony\Component\HttpFoundation\HttpKernelInterface
+     * @var \Symfony\Component\HttpKernel\HttpKernelInterface
      */
     protected $application;
 

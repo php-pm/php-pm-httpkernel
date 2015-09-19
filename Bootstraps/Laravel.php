@@ -17,7 +17,7 @@ class Laravel implements StackableBootstrapInterface
     /**
      * Store the application
      *
-     * @var Symfony\Component\HttpKernel\HttpKernelInterface
+     * @var \Symfony\Component\HttpKernel\HttpKernelInterface
      */
     protected $app;
 
