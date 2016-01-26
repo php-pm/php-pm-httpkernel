@@ -131,20 +131,12 @@ class HttpKernel implements BridgeInterface
           }
         }
 
-        $syRequest = new SymfonyRequest(
-            // $query, $request, $attributes, $cookies, $files, $server, $content
-            $query, $post, array(), $cookies, array(), array(), $content
+        $parameters = 'GET' === $method ? $query : $post;
+        $syRequest = SymfonyRequest::create(
+            // $uri, $method , $parameters , $cookies , $files , $server , $content
+            $reactRequest->getPath(), $method, $parameters, $cookies, array(), array(), $content
         );
-
-        $syRequest->setMethod($method);
         $syRequest->headers->replace($headers);
-
-        // Add server environment.
-        // @see http://php.net/manual/en/reserved.variables.server.php.
-        // @see http://www.faqs.org/rfcs/rfc3875.html.
-        $syRequest->server->set('QUERY_STRING', http_build_query($query));
-        $syRequest->server->set('REQUEST_URI', $reactRequest->getPath());
-        $syRequest->server->set('SERVER_NAME', explode(':', $headers['Host'])[0]);
 
         return $syRequest;
     }
