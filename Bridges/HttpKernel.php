@@ -131,15 +131,12 @@ class HttpKernel implements BridgeInterface
           }
         }
 
-        $syRequest = new SymfonyRequest(
-            // $query, $request, $attributes, $cookies, $files, $server, $content
-            $query, $post, array(), $cookies, array(), array(), $content
+        $parameters = 'GET' === $method ? $query : $post;
+        $syRequest = SymfonyRequest::create(
+            // $uri, $method , $parameters , $cookies , $files , $server , $content
+            $reactRequest->getPath(), $method, $parameters, $cookies, array(), array(), $content
         );
-
-        $syRequest->setMethod($method);
         $syRequest->headers->replace($headers);
-        $syRequest->server->set('REQUEST_URI', $reactRequest->getPath());
-        $syRequest->server->set('SERVER_NAME', explode(':', $headers['Host'])[0]);
 
         return $syRequest;
     }
