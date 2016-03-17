@@ -119,12 +119,12 @@ class HttpKernel implements BridgeInterface
     protected static function mapRequest(ReactRequest $reactRequest, $content)
     {
         $method = $reactRequest->getMethod();
-        $headers = $reactRequest->getHeaders();
+        $headers = array_change_key_case($reactRequest->getHeaders());
         $query = $reactRequest->getQuery();
         $post = array();
 
         // parse body?
-        if (isset($headers['Content-Type']) && (0 === strpos($headers['Content-Type'], 'application/x-www-form-urlencoded'))
+        if (isset($headers['content-type']) && (0 === strpos($headers['content-type'], 'application/x-www-form-urlencoded'))
             && in_array(strtoupper($method), array('POST', 'PUT', 'DELETE', 'PATCH'))
         ) {
             parse_str($content, $post);
@@ -147,7 +147,7 @@ class HttpKernel implements BridgeInterface
         $syRequest->setMethod($method);
         $syRequest->headers->replace($headers);
         $syRequest->server->set('REQUEST_URI', $reactRequest->getPath());
-        $syRequest->server->set('SERVER_NAME', explode(':', $headers['Host'])[0]);
+        $syRequest->server->set('SERVER_NAME', explode(':', $headers['host'])[0]);
 
         return $syRequest;
     }
