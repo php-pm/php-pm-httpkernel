@@ -1,13 +1,12 @@
 <?php
 
 namespace PHPPM\Bootstraps;
-
-use Stack\Builder;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * A default bootstrap for the Symfony framework
  */
-class Symfony implements StackableBootstrapInterface
+class Symfony implements BootstrapInterface
 {
     /**
      * @var string|null The application environment
@@ -15,15 +14,22 @@ class Symfony implements StackableBootstrapInterface
     protected $appenv;
 
     /**
+     * @var boolean
+     */
+    protected $debug;
+
+    /**
      * Instantiate the bootstrap, storing the $appenv
      */
-    public function __construct($appenv)
+    public function __construct($appenv, $debug)
     {
         $this->appenv = $appenv;
+        $this->debug = $debug;
     }
 
     /**
      * Create a Symfony application
+     * @return SymfonyAppKernel
      */
     public function getApplication()
     {
@@ -33,18 +39,16 @@ class Symfony implements StackableBootstrapInterface
 
         $this->includeAutoload();
 
-        $app = new \AppKernel($this->appenv, false);
+        $app = new SymfonyAppKernel($this->appenv, $this->debug); //which extends \AppKernel
         $app->loadClassCache();
+        $app->boot();
+
+        //warm up
+        $request = new Request();
+        $request->setMethod(Request::METHOD_HEAD);
+        $app->handle($request);
 
         return $app;
-    }
-
-    /**
-     * Return the StackPHP stack.
-     */
-    public function getStack(Builder $stack)
-    {
-        return $stack;
     }
 
     /**

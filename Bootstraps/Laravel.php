@@ -7,12 +7,17 @@ use Stack\Builder;
 /**
  * A default bootstrap for the Laravel framework
  */
-class Laravel implements StackableBootstrapInterface
+class Laravel implements BootstrapInterface
 {
     /**
      * @var string|null The application environment
      */
     protected $appenv;
+
+    /**
+     * @var bool
+     */
+    protected $debug = false;
 
     /**
      * Store the application
@@ -25,9 +30,11 @@ class Laravel implements StackableBootstrapInterface
      * Instantiate the bootstrap, storing the $appenv
      * @param string|null $appenv The environment your application will use to bootstrap (if any)
      */
-    public function __construct($appenv)
+    public function __construct($appenv, $debug)
     {
         $this->appenv = $appenv;
+        $this->debug = $debug;
+        putenv("APP_DEBUG=" . ($debug ? 'TRUE' : 'FALSE'));
     }
 
     /**
@@ -47,22 +54,5 @@ class Laravel implements StackableBootstrapInterface
         }
 
         throw new \RuntimeException('Laravel bootstrap file not found');
-    }
-
-    /**
-     * Return the StackPHP stack.
-     * @param Builder $stack
-     * @return Builder
-     */
-    public function getStack(Builder $stack)
-    {
-        $sessionReject = $this->app->bound('session.reject') ? $this->app['session.reject'] : null;
-
-        $stack
-            ->push('Illuminate\Cookie\Guard', $this->app['encrypter'])
-            ->push('Illuminate\Cookie\Queue', $this->app['cookie'])
-            ->push('Illuminate\Session\Middleware', $this->app['session'], $sessionReject);
-
-        return $stack;
     }
 }

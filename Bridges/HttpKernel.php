@@ -2,12 +2,10 @@
 
 namespace PHPPM\Bridges;
 
-use PHPPM\AppBootstrapInterface;
 use PHPPM\Bootstraps\BootstrapInterface;
-use PHPPM\Bridges\BridgeInterface;
+use PHPPM\Bootstraps\SymfonyAppKernel;
 use React\Http\Request as ReactRequest;
 use React\Http\Response as ReactResponse;
-use Stack\Builder;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse as SymfonyStreamedResponse;
@@ -34,9 +32,10 @@ class HttpKernel implements BridgeInterface
      *
      * @param string $appBootstrap The name of the class used to bootstrap the application
      * @param string|null $appenv The environment your application will use to bootstrap (if any)
+     * @param boolean $debug If debug is enabled
      * @see http://stackphp.com
      */
-    public function bootstrap($appBootstrap, $appenv)
+    public function bootstrap($appBootstrap, $appenv, $debug)
     {
         // include applications autoload
         $autoloader = dirname(realpath($_SERVER['SCRIPT_NAME'])) . '/vendor/autoload.php';
@@ -46,17 +45,19 @@ class HttpKernel implements BridgeInterface
 
         $appBootstrap = $this->normalizeAppBootstrap($appBootstrap);
 
-        $bootstrap = new $appBootstrap($appenv);
+        $bootstrap = new $appBootstrap($appenv, $debug);
 
         if ($bootstrap instanceof BootstrapInterface) {
             $this->application = $bootstrap->getApplication();
-
-            if ($bootstrap instanceof StackableBootstrapInterface) {
-                $stack = new Builder();
-                $stack = $bootstrap->getStack($stack);
-                $this->application = $stack->resolve($this->application);
-            }
         }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getStaticDirectory()
+    {
+        return 'web/';
     }
 
     /**
@@ -73,11 +74,10 @@ class HttpKernel implements BridgeInterface
 
         $content = '';
         $headers = $request->getHeaders();
-        $contentLength = isset($headers['Content-Length']) ? (int) $headers['Content-Length'] : 0;
+        $contentLength = isset($headers['Content-Length']) ? (int)$headers['Content-Length'] : 0;
 
-        $request->on('data', function($data)
-            use ($request, $response, &$content, $contentLength)
-        {
+        $request->on('data', function ($data)
+        use ($request, $response, &$content, $contentLength) {
             // read data (may be empty for GET request)
             $content .= $data;
 
@@ -86,17 +86,25 @@ class HttpKernel implements BridgeInterface
                 $syRequest = self::mapRequest($request, $content);
 
                 try {
+                    if ($this->application instanceof SymfonyAppKernel) {
+                        $this->application->preHandle();
+                    }
+
                     $syResponse = $this->application->handle($syRequest);
                 } catch (\Exception $exception) {
                     $response->writeHead(500); // internal server error
                     $response->end();
-                    return;
+                    throw $exception;
                 }
 
                 self::mapResponse($response, $syResponse);
 
                 if ($this->application instanceof TerminableInterface) {
                     $this->application->terminate($syRequest, $syResponse);
+                }
+
+                if ($this->application instanceof SymfonyAppKernel) {
+                    $this->application->postHandle();
                 }
             }
         });
@@ -124,15 +132,15 @@ class HttpKernel implements BridgeInterface
 
         $cookies = array();
         if (isset($headers['Cookie'])) {
-          $headersCookie = explode(';', $headers['Cookie']);
-          foreach ($headersCookie as $cookie) {
-            list($name, $value) = explode('=', trim($cookie));
-            $cookies[$name] = $value;
-          }
+            $headersCookie = explode(';', $headers['Cookie']);
+            foreach ($headersCookie as $cookie) {
+                list($name, $value) = explode('=', trim($cookie));
+                $cookies[$name] = $value;
+            }
         }
 
         $syRequest = new SymfonyRequest(
-            // $query, $request, $attributes, $cookies, $files, $server, $content
+        // $query, $request, $attributes, $cookies, $files, $server, $content
             $query, $post, array(), $cookies, array(), array(), $content
         );
 
@@ -151,7 +159,7 @@ class HttpKernel implements BridgeInterface
      * @param SymfonyResponse $syResponse
      */
     protected static function mapResponse(ReactResponse $reactResponse,
-        SymfonyResponse $syResponse)
+                                          SymfonyResponse $syResponse)
     {
         $headers = $syResponse->headers->all();
         $reactResponse->writeHead($syResponse->getStatusCode(), $headers);
@@ -162,8 +170,7 @@ class HttpKernel implements BridgeInterface
             $syResponse->sendContent();
             $content = ob_get_contents();
             ob_end_clean();
-        }
-        else {
+        } else {
             $content = $syResponse->getContent();
         }
 
