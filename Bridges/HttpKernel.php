@@ -139,9 +139,11 @@ class HttpKernel implements BridgeInterface
             }
         }
 
+        $files = $reactRequest->getFiles();
+
         $syRequest = new SymfonyRequest(
         // $query, $request, $attributes, $cookies, $files, $server, $content
-            $query, $post, array(), $cookies, array(), array(), $content
+            $query, $post, array(), $cookies, $files, array(), $content
         );
 
         $syRequest->setMethod($method);
