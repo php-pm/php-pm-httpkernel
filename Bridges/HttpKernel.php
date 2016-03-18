@@ -4,11 +4,11 @@ namespace PHPPM\Bridges;
 
 use PHPPM\Bootstraps\BootstrapInterface;
 use PHPPM\Bootstraps\SymfonyAppKernel;
+use PHPPM\React\HttpResponse;
 use React\Http\Request as ReactRequest;
-use React\Http\Response as ReactResponse;
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
-use Symfony\Component\HttpFoundation\StreamedResponse as SymfonyStreamedResponse;
 use Symfony\Component\HttpKernel\TerminableInterface;
 
 class HttpKernel implements BridgeInterface
@@ -38,7 +38,7 @@ class HttpKernel implements BridgeInterface
     public function bootstrap($appBootstrap, $appenv, $debug)
     {
         // include applications autoload
-        $autoloader = dirname(realpath($_SERVER['SCRIPT_NAME'])) . '/vendor/autoload.php';
+        $autoloader = './vendor/autoload.php';
         if (file_exists($autoloader)) {
             require_once $autoloader;
         }
@@ -63,51 +63,38 @@ class HttpKernel implements BridgeInterface
     /**
      * Handle a request using a HttpKernelInterface implementing application.
      *
-     * @param \React\Http\Request $request
-     * @param \React\Http\Response $response
+     * @param ReactRequest $request
+     * @param HttpResponse $response
      */
-    public function onRequest(ReactRequest $request, ReactResponse $response)
+    public function onRequest(ReactRequest $request, HttpResponse $response)
     {
         if (null === $this->application) {
             return;
         }
 
-        $content = '';
-        $headers = $request->getHeaders();
-        $contentLength = isset($headers['Content-Length']) ? (int)$headers['Content-Length'] : 0;
+        $syRequest = self::mapRequest($request);
 
-        $request->on('data', function ($data)
-        use ($request, $response, &$content, $contentLength) {
-            // read data (may be empty for GET request)
-            $content .= $data;
-
-            // handle request after receive
-            if (strlen($content) >= $contentLength) {
-                $syRequest = self::mapRequest($request, $content);
-
-                try {
-                    if ($this->application instanceof SymfonyAppKernel) {
-                        $this->application->preHandle();
-                    }
-
-                    $syResponse = $this->application->handle($syRequest);
-                } catch (\Exception $exception) {
-                    $response->writeHead(500); // internal server error
-                    $response->end();
-                    throw $exception;
-                }
-
-                self::mapResponse($response, $syResponse);
-
-                if ($this->application instanceof TerminableInterface) {
-                    $this->application->terminate($syRequest, $syResponse);
-                }
-
-                if ($this->application instanceof SymfonyAppKernel) {
-                    $this->application->postHandle();
-                }
+        try {
+            if ($this->application instanceof SymfonyAppKernel) {
+                $this->application->preHandle();
             }
-        });
+
+            $syResponse = $this->application->handle($syRequest);
+        } catch (\Exception $exception) {
+            $response->writeHead(500); // internal server error
+            $response->end();
+            throw $exception;
+        }
+
+        self::mapResponse($response, $syResponse);
+
+        if ($this->application instanceof TerminableInterface) {
+            $this->application->terminate($syRequest, $syResponse);
+        }
+
+        if ($this->application instanceof SymfonyAppKernel) {
+            $this->application->postHandle();
+        }
     }
 
     /**
@@ -116,19 +103,11 @@ class HttpKernel implements BridgeInterface
      * @param ReactRequest $reactRequest
      * @return SymfonyRequest $syRequest
      */
-    protected static function mapRequest(ReactRequest $reactRequest, $content)
+    protected static function mapRequest(ReactRequest $reactRequest)
     {
         $method = $reactRequest->getMethod();
         $headers = array_change_key_case($reactRequest->getHeaders());
         $query = $reactRequest->getQuery();
-        $post = array();
-
-        // parse body?
-        if (isset($headers['content-type']) && (0 === strpos($headers['content-type'], 'application/x-www-form-urlencoded'))
-            && in_array(strtoupper($method), array('POST', 'PUT', 'DELETE', 'PATCH'))
-        ) {
-            parse_str($content, $post);
-        }
 
         $cookies = array();
         if (isset($headers['Cookie'])) {
@@ -140,16 +119,12 @@ class HttpKernel implements BridgeInterface
         }
 
         $files = $reactRequest->getFiles();
+        $post = $reactRequest->getPost();
 
-        $syRequest = new SymfonyRequest(
-        // $query, $request, $attributes, $cookies, $files, $server, $content
-            $query, $post, array(), $cookies, $files, array(), $content
-        );
+        $syRequest = new SymfonyRequest($query, $post, $attributes = [], $cookies, $files, $_SERVER, $reactRequest->getBody());
 
         $syRequest->setMethod($method);
         $syRequest->headers->replace($headers);
-        $syRequest->server->set('REQUEST_URI', $reactRequest->getPath());
-        $syRequest->server->set('SERVER_NAME', explode(':', $headers['host'])[0]);
 
         return $syRequest;
     }
@@ -157,25 +132,49 @@ class HttpKernel implements BridgeInterface
     /**
      * Convert Symfony\Component\HttpFoundation\Response to React\Http\Response
      *
-     * @param ReactResponse $reactResponse
+     * @param HttpResponse $reactResponse
      * @param SymfonyResponse $syResponse
      */
-    protected static function mapResponse(ReactResponse $reactResponse,
-                                          SymfonyResponse $syResponse)
+    protected static function mapResponse(HttpResponse $reactResponse, SymfonyResponse $syResponse)
     {
-        $headers = $syResponse->headers->all();
-        $reactResponse->writeHead($syResponse->getStatusCode(), $headers);
+        $syResponse->sendHeaders();
 
-        // @TODO convert StreamedResponse in an async manner
-        if ($syResponse instanceof SymfonyStreamedResponse) {
-            ob_start();
-            $syResponse->sendContent();
-            $content = ob_get_contents();
-            ob_end_clean();
-        } else {
-            $content = $syResponse->getContent();
+        ob_start();
+        $syResponse->sendContent();
+        $content = ob_get_contents();
+        ob_end_clean();
+
+        $headers = $syResponse->headers->allPreserveCase();
+        $cookies = [];
+
+        /** @var Cookie $cookie */
+        foreach ($syResponse->headers->getCookies() as $cookie) {
+            $cookieHeader = sprintf('%s=%s', $cookie->getName(), $cookie->getValue());
+
+            if ($cookie->getPath()) {
+                $cookieHeader .= '; Path=' . $cookie->getPath();
+            }
+            if ($cookie->getDomain()) {
+                $cookieHeader .= '; Domain=' . $cookie->getDomain();
+            }
+
+            if ($cookie->getExpiresTime()) {
+                $cookieHeader .= '; Expires=' . $cookie->getExpiresTime();
+            }
+
+            if ($cookie->isSecure()) {
+                $cookieHeader .= '; Secure';
+            }
+            if ($cookie->isHttpOnly()) {
+                $cookieHeader .= '; HttpOnly';
+            }
+
+            $cookies[] = $cookieHeader;
         }
 
+        $headers['Set-Cookie'] = $cookies;
+
+        $reactResponse->writeHead($syResponse->getStatusCode(), $headers);
         $reactResponse->end($content);
     }
 
