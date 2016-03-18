@@ -12,3 +12,12 @@ HttpKernel adapter for use of Symfony and Laravel frameworks with PHP-PM. See ht
 
         composer require php-pm/httpkernel-adapter:dev-master
 
+> **Note**: Make sure your `AppKernel` is autoloaded in your `composer.json`:
+>
+> ```
+> {
+>     "autoload": {
+>         "classmap": ["app/AppKernel.php"]
+>     }
+> }
+> ```
