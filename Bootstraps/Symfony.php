@@ -33,10 +33,6 @@ class Symfony implements BootstrapInterface
      */
     public function getApplication()
     {
-        if (file_exists('./app/AppKernel.php')) {
-            require_once './app/AppKernel.php';
-        }
-
         $this->includeAutoload();
 
         $app = new SymfonyAppKernel($this->appenv, $this->debug); //which extends \AppKernel
