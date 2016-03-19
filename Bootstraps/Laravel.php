@@ -34,7 +34,8 @@ class Laravel implements BootstrapInterface
     {
         $this->appenv = $appenv;
         $this->debug = $debug;
-        putenv("APP_DEBUG=" . ($debug ? 'TRUE' : 'FALSE'));
+        putenv("APP_DEBUG=" . ($debug ? 'true' : 'false'));
+        putenv("APP_ENV=" . $this->appenv);
     }
 
     /**
@@ -49,17 +50,27 @@ class Laravel implements BootstrapInterface
      */
     public function getApplication()
     {
+
+        if (file_exists('bootstrap/autoload.php')) {
+            require_once 'bootstrap/autoload.php';
+        }
+
         // Laravel 5 / Lumen
         if (file_exists('bootstrap/app.php')) {
-            return $this->app = require_once 'bootstrap/app.php';
+            $this->app = require_once 'bootstrap/app.php';
         }
 
         // Laravel 4
         if (file_exists('bootstrap/start.php')) {
-            require_once 'bootstrap/autoload.php';
-            return $this->app = require_once 'bootstrap/start.php';
+            $this->app = require_once 'bootstrap/start.php';
         }
 
-        throw new \RuntimeException('Laravel bootstrap file not found');
+        if (!$this->app) {
+            throw new \RuntimeException('Laravel bootstrap file not found');
+        }
+
+        $this->app->boot();
+
+        return $this->app;
     }
 }

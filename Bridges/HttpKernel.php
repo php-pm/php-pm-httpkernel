@@ -136,12 +136,7 @@ class HttpKernel implements BridgeInterface
      */
     protected static function mapResponse(HttpResponse $reactResponse, SymfonyResponse $syResponse)
     {
-        $syResponse->sendHeaders();
-
-        ob_start();
-        $syResponse->sendContent();
-        $content = ob_get_contents();
-        ob_end_clean();
+        $content = $syResponse->getContent();
 
         $headers = $syResponse->headers->allPreserveCase();
         $cookies = [];
