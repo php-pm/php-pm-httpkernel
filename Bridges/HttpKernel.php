@@ -21,6 +21,11 @@ class HttpKernel implements BridgeInterface
     protected $application;
 
     /**
+     * @var BootstrapInterface
+     */
+    protected $bootstrap;
+
+    /**
      * Bootstrap an application implementing the HttpKernelInterface.
      *
      * In the process of bootstrapping we decorate our application with any number of
@@ -37,18 +42,12 @@ class HttpKernel implements BridgeInterface
      */
     public function bootstrap($appBootstrap, $appenv, $debug)
     {
-        // include applications autoload
-        $autoloader = './vendor/autoload.php';
-        if (file_exists($autoloader)) {
-            require_once $autoloader;
-        }
-
         $appBootstrap = $this->normalizeAppBootstrap($appBootstrap);
 
-        $bootstrap = new $appBootstrap($appenv, $debug);
+        $this->bootstrap = new $appBootstrap($appenv, $debug);
 
-        if ($bootstrap instanceof BootstrapInterface) {
-            $this->application = $bootstrap->getApplication();
+        if ($this->bootstrap instanceof BootstrapInterface) {
+            $this->application = $this->bootstrap->getApplication();
         }
     }
 
@@ -57,7 +56,7 @@ class HttpKernel implements BridgeInterface
      */
     public function getStaticDirectory()
     {
-        return 'web/';
+        return $this->bootstrap->getStaticDirectory();
     }
 
     /**
@@ -186,13 +185,17 @@ class HttpKernel implements BridgeInterface
     protected function normalizeAppBootstrap($appBootstrap)
     {
         $appBootstrap = str_replace('\\\\', '\\', $appBootstrap);
-        if (false === class_exists($appBootstrap)) {
-            $appBootstrap = '\\' . $appBootstrap;
-            if (false === class_exists($appBootstrap)) {
-                throw new \RuntimeException('Could not find bootstrap class ' . $appBootstrap);
+
+        $bootstraps = [
+            $appBootstrap,
+            '\\' . $appBootstrap,
+            '\\PHPPM\Bootstraps\\' . ucfirst($appBootstrap)
+        ];
+
+        foreach ($bootstraps as $class) {
+            if (class_exists($class)) {
+                return $class;
             }
-            return $appBootstrap;
         }
-        return $appBootstrap;
     }
 }

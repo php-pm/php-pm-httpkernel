@@ -38,6 +38,13 @@ class Laravel implements BootstrapInterface
     }
 
     /**
+     * @return string
+     */
+    public function getStaticDirectory() {
+        return 'public/';
+    }
+
+    /**
      * Create a Laravel application
      */
     public function getApplication()
