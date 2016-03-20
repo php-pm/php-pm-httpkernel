@@ -3,7 +3,7 @@
 namespace PHPPM\Bridges;
 
 use PHPPM\Bootstraps\BootstrapInterface;
-use PHPPM\Bootstraps\SymfonyAppKernel;
+use PHPPM\Bootstraps\HooksInterface;
 use PHPPM\React\HttpResponse;
 use React\Http\Request as ReactRequest;
 use Symfony\Component\HttpFoundation\Cookie;
@@ -73,9 +73,14 @@ class HttpKernel implements BridgeInterface
 
         $syRequest = self::mapRequest($request);
 
+        //start buffering the output, so cgi is not sending any http headers
+        //this is necessary because it would break session handling since
+        //headers_sent() returns true if any unbuffered output reaches cgi stdout.
+        ob_start();
+
         try {
-            if ($this->application instanceof SymfonyAppKernel) {
-                $this->application->preHandle();
+            if ($this->bootstrap instanceof HooksInterface) {
+                $this->bootstrap->preHandle($this->application);
             }
 
             $syResponse = $this->application->handle($syRequest);
@@ -91,8 +96,8 @@ class HttpKernel implements BridgeInterface
             $this->application->terminate($syRequest, $syResponse);
         }
 
-        if ($this->application instanceof SymfonyAppKernel) {
-            $this->application->postHandle();
+        if ($this->bootstrap instanceof HooksInterface) {
+            $this->bootstrap->postHandle($this->application);
         }
     }
 
@@ -169,7 +174,14 @@ class HttpKernel implements BridgeInterface
         $headers['Set-Cookie'] = $cookies;
 
         $reactResponse->writeHead($syResponse->getStatusCode(), $headers);
-        $reactResponse->end($content);
+
+        $stdOut = '';
+        while ($buffer = @ob_get_clean()) {
+            $stdOut .= $buffer;
+        }
+
+        $reactResponse->end($stdOut . $content);
+
     }
 
     /**

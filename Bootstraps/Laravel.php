@@ -2,12 +2,10 @@
 
 namespace PHPPM\Bootstraps;
 
-use Stack\Builder;
-
 /**
  * A default bootstrap for the Laravel framework
  */
-class Laravel implements BootstrapInterface
+class Laravel implements BootstrapInterface, HooksInterface
 {
     /**
      * @var string|null The application environment
@@ -72,5 +70,21 @@ class Laravel implements BootstrapInterface
         $this->app->boot();
 
         return $this->app;
+    }
+
+    /**
+     * @param \Illuminate\Contracts\Foundation\Application $app
+     */
+    public function preHandle($app)
+    {
+        //reset const LARAVEL_START, to get the correct timing
+    }
+
+    /**
+     * @param \Illuminate\Contracts\Foundation\Application $app
+     */
+    public function postHandle($app)
+    {
+        //reset debugbar if available
     }
 }
