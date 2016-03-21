@@ -71,13 +71,14 @@ class Symfony implements BootstrapInterface, HooksInterface
     public function preHandle($app)
     {
         //resets Kernels startTime, so Symfony can correctly calculate the execution time
-        \Closure::bind(
+        $func = \Closure::bind(
             function () {
                 $this->startTime = microtime(true);
             },
             $app,
             'AppKernel'
-        )->call($app);
+        );
+        $func($app);
     }
 
     /**
