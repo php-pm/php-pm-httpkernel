@@ -115,7 +115,7 @@ class Symfony implements BootstrapInterface, HooksInterface
                 }, $profiler->get('db'), null, 'Symfony\Bridge\Doctrine\DataCollector\DoctrineDataCollector');
             }
 
-            //ExceptionDataCollector
+            //EventDataCollector
             if ($profiler->has('events')) {
                 Utils::hijackProperty($profiler->get('events'), 'data', array(
                     'called_listeners' => array(),
