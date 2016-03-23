@@ -6,6 +6,7 @@ use PHPPM\Bootstraps\AbstractBootstrap;
 use PHPPM\Bootstraps\BootstrapInterface;
 use PHPPM\Bootstraps\HooksInterface;
 use PHPPM\React\HttpResponse;
+use PHPPM\Utils;
 use React\Http\Request as ReactRequest;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
@@ -65,6 +66,8 @@ class HttpKernel implements BridgeInterface
      *
      * @param ReactRequest $request
      * @param HttpResponse $response
+     *
+     * @throws \Exception
      */
     public function onRequest(ReactRequest $request, HttpResponse $response)
     {
@@ -111,16 +114,33 @@ class HttpKernel implements BridgeInterface
     protected function mapRequest(ReactRequest $reactRequest)
     {
         $method = $reactRequest->getMethod();
-        $headers = array_change_key_case($reactRequest->getHeaders());
+        $headers = $reactRequest->getHeaders();
         $query = $reactRequest->getQuery();
 
-        $cookies = array();
-        if (isset($headers['Cookie'])) {
-            $headersCookie = explode(';', $headers['Cookie']);
+        $cookies = [];
+        $_COOKIE = [];
+
+        $sessionCookieSet = false;
+
+        if (isset($headers['Cookie']) || isset($headers['cookie'])) {
+            $headersCookie = explode(';', isset($headers['Cookie']) ? $headers['Cookie'] : $headers['cookie']);
             foreach ($headersCookie as $cookie) {
                 list($name, $value) = explode('=', trim($cookie));
                 $cookies[$name] = $value;
+                $_COOKIE[$name] = $value;
+
+                if ($name === session_name()) {
+                    session_id($value);
+                    $sessionCookieSet = true;
+                }
             }
+        }
+
+        if (!$sessionCookieSet && session_id()) {
+            //session id already set from the last round but not got from the cookie header,
+            //so generate a new one, since php is not doing it automatically with session_start() if session
+            //has already been started.
+            session_id(Utils::generateSessionId());
         }
 
         $files = $reactRequest->getFiles();
@@ -144,9 +164,38 @@ class HttpKernel implements BridgeInterface
      */
     protected function mapResponse(HttpResponse $reactResponse, SymfonyResponse $syResponse)
     {
+        //end active session
+        if (PHP_SESSION_ACTIVE === session_status()) {
+            session_write_close();
+            session_unset(); //reset $_SESSION
+        }
+
         $content = $syResponse->getContent();
 
-        $headers = $syResponse->headers->allPreserveCase();
+        $nativeHeaders = [];
+
+        foreach (headers_list() as $header) {
+            if (false !== $pos = strpos($header, ':')) {
+                $name = substr($header, 0, $pos);
+                $value = trim(substr($header, $pos + 1));
+
+                if (isset($nativeHeaders[$name])) {
+                    if (!is_array($nativeHeaders[$name])) {
+                        $nativeHeaders[$name] = [$nativeHeaders[$name]];
+                    }
+
+                    $nativeHeaders[$name][] = $value;
+                } else {
+                    $nativeHeaders[$name] = $value;
+                }
+            }
+        }
+
+        //after reading all headers we need to reset it, so next request
+        //operates on a clean header.
+        header_remove();
+
+        $headers = array_merge($nativeHeaders, $syResponse->headers->allPreserveCase());
         $cookies = [];
 
         /** @var Cookie $cookie */
@@ -154,7 +203,7 @@ class HttpKernel implements BridgeInterface
             $cookieHeader = sprintf('%s=%s', $cookie->getName(), $cookie->getValue());
 
             if ($cookie->getPath()) {
-                $cookieHeader .= '; Path=' . $cookie->getPath();
+                $cookieHeader .= '; Path=' . urlencode($cookie->getPath());
             }
             if ($cookie->getDomain()) {
                 $cookieHeader .= '; Domain=' . $cookie->getDomain();
@@ -174,7 +223,11 @@ class HttpKernel implements BridgeInterface
             $cookies[] = $cookieHeader;
         }
 
-        $headers['Set-Cookie'] = $cookies;
+        if (isset($headers['Set-Cookie'])) {
+            $headers['Set-Cookie'] = array_merge((array)$headers['Set-Cookie'], $cookies);
+        } else {
+            $headers['Set-Cookie'] = $cookies;
+        }
 
         $reactResponse->writeHead($syResponse->getStatusCode(), $headers);
 
@@ -184,7 +237,6 @@ class HttpKernel implements BridgeInterface
         }
 
         $reactResponse->end($stdOut . $content);
-
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace PHPPM\Bootstraps;
 
+use PHPPM\Symfony\StrongerNativeSessionStorage;
 use PHPPM\Utils;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -52,9 +53,35 @@ class Symfony extends AbstractBootstrap implements HooksInterface
             require './vendor/autoload.php';
         }
 
+        //since we need to change some services, we need to manually change some services
         $app = new \AppKernel($this->appenv, $this->debug);
-        $app->loadClassCache();
-        $app->boot();
+
+        //we need to change some services, before the boot, because they would otherwise
+        //be instantiated and passed to other classes which makes it impossible to replace them.
+        Utils::bindAndCall(function() use ($app) {
+            // init bundles
+            $app->initializeBundles();
+
+            // init container
+            $app->initializeContainer();
+        }, $app);
+
+        //now we can modify the container
+        $nativeStorage = new StrongerNativeSessionStorage(
+            $app->getContainer()->getParameter('session.storage.options'),
+            $app->getContainer()->has('session.handler') ? $app->getContainer()->get('session.handler'): null,
+            $app->getContainer()->get('session.storage.metadata_bag')
+        );
+        $app->getContainer()->set('session.storage.native', $nativeStorage);
+
+        Utils::bindAndCall(function() use ($app) {
+            foreach ($app->getBundles() as $bundle) {
+                $bundle->setContainer($app->container);
+                $bundle->boot();
+            }
+
+            $app->booted = true;
+        }, $app);
 
         //warm up
         $request = new Request();
