@@ -2,6 +2,7 @@
 
 namespace PHPPM\Bridges;
 
+use PHPPM\Bootstraps\AbstractBootstrap;
 use PHPPM\Bootstraps\BootstrapInterface;
 use PHPPM\Bootstraps\HooksInterface;
 use PHPPM\React\HttpResponse;
@@ -21,7 +22,7 @@ class HttpKernel implements BridgeInterface
     protected $application;
 
     /**
-     * @var BootstrapInterface
+     * @var AbstractBootstrap
      */
     protected $bootstrap;
 
@@ -71,7 +72,7 @@ class HttpKernel implements BridgeInterface
             return;
         }
 
-        $syRequest = self::mapRequest($request);
+        $syRequest = $this->mapRequest($request);
 
         //start buffering the output, so cgi is not sending any http headers
         //this is necessary because it would break session handling since
@@ -90,7 +91,7 @@ class HttpKernel implements BridgeInterface
             throw $exception;
         }
 
-        self::mapResponse($response, $syResponse);
+        $this->mapResponse($response, $syResponse);
 
         if ($this->application instanceof TerminableInterface) {
             $this->application->terminate($syRequest, $syResponse);
@@ -107,7 +108,7 @@ class HttpKernel implements BridgeInterface
      * @param ReactRequest $reactRequest
      * @return SymfonyRequest $syRequest
      */
-    protected static function mapRequest(ReactRequest $reactRequest)
+    protected function mapRequest(ReactRequest $reactRequest)
     {
         $method = $reactRequest->getMethod();
         $headers = array_change_key_case($reactRequest->getHeaders());
@@ -125,7 +126,9 @@ class HttpKernel implements BridgeInterface
         $files = $reactRequest->getFiles();
         $post = $reactRequest->getPost();
 
-        $syRequest = new SymfonyRequest($query, $post, $attributes = [], $cookies, $files, $_SERVER, $reactRequest->getBody());
+        $class = $this->bootstrap->requestClass();
+
+        $syRequest = new $class($query, $post, $attributes = [], $cookies, $files, $_SERVER, $reactRequest->getBody());
 
         $syRequest->setMethod($method);
         $syRequest->headers->replace($headers);
@@ -139,7 +142,7 @@ class HttpKernel implements BridgeInterface
      * @param HttpResponse $reactResponse
      * @param SymfonyResponse $syResponse
      */
-    protected static function mapResponse(HttpResponse $reactResponse, SymfonyResponse $syResponse)
+    protected function mapResponse(HttpResponse $reactResponse, SymfonyResponse $syResponse)
     {
         $content = $syResponse->getContent();
 

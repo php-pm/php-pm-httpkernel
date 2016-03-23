@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
  * @see \PHPPM\Bootstraps\Symfony
  * @see \PHPPM\Bridges\HttpKernel
  */
-class Drupal implements BootstrapInterface
+class Drupal extends AbstractBootstrap
 {
     /**
      * The PHP environment in which to bootstrap (such as 'dev' or 'production').

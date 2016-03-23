@@ -37,10 +37,17 @@ class Laravel implements BootstrapInterface, HooksInterface
     }
 
     /**
-     * @return string
+     * {@inheritdoc}
      */
     public function getStaticDirectory() {
         return 'public/';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function requestClass() {
+        return '\Illuminate\Http\Request';
     }
 
     /**
@@ -48,10 +55,7 @@ class Laravel implements BootstrapInterface, HooksInterface
      */
     public function getApplication()
     {
-
-        if (file_exists('bootstrap/autoload.php')) {
-            require_once 'bootstrap/autoload.php';
-        }
+        require_once 'bootstrap/autoload.php';
 
         // Laravel 5 / Lumen
         if (file_exists('bootstrap/app.php')) {
@@ -67,9 +71,9 @@ class Laravel implements BootstrapInterface, HooksInterface
             throw new \RuntimeException('Laravel bootstrap file not found');
         }
 
-        $this->app->boot();
+        $kernel = $this->app->make('Illuminate\Contracts\Http\Kernel');
 
-        return $this->app;
+        return $kernel;
     }
 
     /**
