@@ -117,6 +117,17 @@ class Symfony extends AbstractBootstrap implements HooksInterface
             $container->get('debug.stopwatch')->__construct();
         }
 
+        //Symfony\Bundle\TwigBundle\Loader\FilesystemLoader
+        //->Twig_Loader_Filesystem
+        if ($container->has('twig.loader')) {
+            $twigLoader = $container->get('twig.loader');
+            Utils::bindAndCall(function() use ($twigLoader) {
+                foreach ($twigLoader->cache as $path) {
+                    ppm_register_file($path);
+                }
+            }, $twigLoader);
+        }
+
         //reset all profiler stuff currently supported
         if ($container->has('profiler')) {
             $profiler = $container->get('profiler');
