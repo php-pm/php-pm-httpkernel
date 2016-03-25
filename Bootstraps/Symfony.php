@@ -45,30 +45,28 @@ class Symfony extends AbstractBootstrap implements HooksInterface
      */
     public function getApplication()
     {
-
-
-
         // include applications autoload
         $appAutoLoader = './app/autoload.php';
         if (file_exists($appAutoLoader)) {
             require $appAutoLoader;
-            $app = new \AppKernel($this->appenv, $this->debug);
-        } elseif(file_exists('./vendor/autoload.php')) {
+        } elseif (file_exists('./vendor/autoload.php')) {
             require './vendor/autoload.php';
+        }
+        if(class_exists('\AppKernel')) {
             $app = new \AppKernel($this->appenv, $this->debug);
         } else {
-            $loader = require_once __DIR__.'./app/bootstrap.php.cache';
-            require_once __DIR__.'/../app/AppKernel.php';
-            $kernel = new AppKernel('prod', false);
+            if(file_exists('./app/bootstrap.php.cache') && file_exists('./app/AppKernel.php')) {
+                require_once './app/bootstrap.php.cache';
+                require_once './app/AppKernel.php';
+                $app = new \AppKernel($this->appenv, $this->debug);
+            }
+
 
         }
-
         //since we need to change some services, we need to manually change some services
-
-
         //we need to change some services, before the boot, because they would otherwise
         //be instantiated and passed to other classes which makes it impossible to replace them.
-        Utils::bindAndCall(function() use ($app) {
+        Utils::bindAndCall(function () use ($app) {
             // init bundles
             $app->initializeBundles();
 
@@ -79,12 +77,12 @@ class Symfony extends AbstractBootstrap implements HooksInterface
         //now we can modify the container
         $nativeStorage = new StrongerNativeSessionStorage(
             $app->getContainer()->getParameter('session.storage.options'),
-            $app->getContainer()->has('session.handler') ? $app->getContainer()->get('session.handler'): null,
+            $app->getContainer()->has('session.handler') ? $app->getContainer()->get('session.handler') : null,
             $app->getContainer()->get('session.storage.metadata_bag')
         );
         $app->getContainer()->set('session.storage.native', $nativeStorage);
 
-        Utils::bindAndCall(function() use ($app) {
+        Utils::bindAndCall(function () use ($app) {
             foreach ($app->getBundles() as $bundle) {
                 $bundle->setContainer($app->container);
                 $bundle->boot();
@@ -131,7 +129,7 @@ class Symfony extends AbstractBootstrap implements HooksInterface
         //->Twig_Loader_Filesystem
         if ($container->has('twig.loader')) {
             $twigLoader = $container->get('twig.loader');
-            Utils::bindAndCall(function() use ($twigLoader) {
+            Utils::bindAndCall(function () use ($twigLoader) {
                 foreach ($twigLoader->cache as $path) {
                     ppm_register_file($path);
                 }
@@ -157,7 +155,7 @@ class Symfony extends AbstractBootstrap implements HooksInterface
             if ($profiler->has('db')) {
                 Utils::bindAndCall(function () {
                     //$logger: \Doctrine\DBAL\Logging\DebugStack
-                    foreach ($this->loggers as $logger){
+                    foreach ($this->loggers as $logger) {
                         Utils::hijackProperty($logger, 'queries', []);
                     }
                 }, $profiler->get('db'), null, 'Symfony\Bridge\Doctrine\DataCollector\DoctrineDataCollector');
