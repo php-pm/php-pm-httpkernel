@@ -45,16 +45,26 @@ class Symfony extends AbstractBootstrap implements HooksInterface
      */
     public function getApplication()
     {
+
+
+
         // include applications autoload
         $appAutoLoader = './app/autoload.php';
         if (file_exists($appAutoLoader)) {
             require $appAutoLoader;
-        } else {
+            $app = new \AppKernel($this->appenv, $this->debug);
+        } elseif(file_exists('./vendor/autoload.php')) {
             require './vendor/autoload.php';
+            $app = new \AppKernel($this->appenv, $this->debug);
+        } else {
+            $loader = require_once __DIR__.'./app/bootstrap.php.cache';
+            require_once __DIR__.'/../app/AppKernel.php';
+            $kernel = new AppKernel('prod', false);
+
         }
 
         //since we need to change some services, we need to manually change some services
-        $app = new \AppKernel($this->appenv, $this->debug);
+
 
         //we need to change some services, before the boot, because they would otherwise
         //be instantiated and passed to other classes which makes it impossible to replace them.
