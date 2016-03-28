@@ -83,12 +83,6 @@ class Symfony extends AbstractBootstrap implements HooksInterface
             $app->booted = true;
         }, $app);
 
-        //warm up
-        $request = new Request();
-        $request->setMethod(Request::METHOD_HEAD);
-        $app->handle($request);
-        $this->postHandle($app);
-
         return $app;
     }
 
