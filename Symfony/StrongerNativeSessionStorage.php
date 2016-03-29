@@ -23,7 +23,6 @@ class StrongerNativeSessionStorage extends \Symfony\Component\HttpFoundation\Ses
             $params = session_get_cookie_params();
 
             session_id(\PHPPM\Utils::generateSessionId());
-            error_log('StrongerNativeSessionStorage::regenerate ' . $params['lifetime'] . ' = ' . session_id());
 
             setcookie(
                 session_name(),
@@ -39,6 +38,5 @@ class StrongerNativeSessionStorage extends \Symfony\Component\HttpFoundation\Ses
 
         return $isRegenerated;
     }
-
 
 }
