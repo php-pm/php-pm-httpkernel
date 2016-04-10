@@ -203,14 +203,14 @@ class HttpKernel implements BridgeInterface
             $cookieHeader = sprintf('%s=%s', $cookie->getName(), $cookie->getValue());
 
             if ($cookie->getPath()) {
-                $cookieHeader .= '; Path=' . urlencode($cookie->getPath());
+                $cookieHeader .= '; Path=' . $cookie->getPath();
             }
             if ($cookie->getDomain()) {
                 $cookieHeader .= '; Domain=' . $cookie->getDomain();
             }
 
             if ($cookie->getExpiresTime()) {
-                $cookieHeader .= '; Expires=' . $cookie->getExpiresTime();
+                $cookieHeader .= '; Expires=' . gmdate('D, d-M-Y H:i:s', $cookie->getExpiresTime()). ' GMT';
             }
 
             if ($cookie->isSecure()) {
