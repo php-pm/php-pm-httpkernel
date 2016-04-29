@@ -2,9 +2,9 @@
 
 namespace PHPPM\Bridges;
 
-use PHPPM\Bootstraps\AbstractBootstrap;
 use PHPPM\Bootstraps\BootstrapInterface;
 use PHPPM\Bootstraps\HooksInterface;
+use PHPPM\Bootstraps\RequestClassProviderInterface;
 use PHPPM\React\HttpResponse;
 use PHPPM\Utils;
 use React\Http\Request as ReactRequest;
@@ -23,7 +23,7 @@ class HttpKernel implements BridgeInterface
     protected $application;
 
     /**
-     * @var AbstractBootstrap
+     * @var BootstrapInterface
      */
     protected $bootstrap;
 
@@ -146,7 +146,12 @@ class HttpKernel implements BridgeInterface
         $files = $reactRequest->getFiles();
         $post = $reactRequest->getPost();
 
-        $class = $this->bootstrap->requestClass();
+        if ($this->bootstrap instanceof RequestClassProviderInterface) {
+            $class = $this->bootstrap->requestClass();
+        }
+        else {
+            $class = '\Symfony\Component\HttpFoundation\Request';
+        }
 
         $syRequest = new $class($query, $post, $attributes = [], $cookies, $files, $_SERVER, $reactRequest->getBody());
 
