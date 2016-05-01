@@ -11,6 +11,7 @@ use React\Http\Request as ReactRequest;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse as SymfonyStreamedResponse;
 use Symfony\Component\HttpKernel\TerminableInterface;
 
 class HttpKernel implements BridgeInterface
@@ -171,6 +172,9 @@ class HttpKernel implements BridgeInterface
         }
 
         $content = $syResponse->getContent();
+        if ($syResponse instanceof SymfonyStreamedResponse) {
+            $syResponse->sendContent();
+        }
 
         $nativeHeaders = [];
 
