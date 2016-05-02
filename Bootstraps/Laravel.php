@@ -5,7 +5,7 @@ namespace PHPPM\Bootstraps;
 /**
  * A default bootstrap for the Laravel framework
  */
-class Laravel implements BootstrapInterface, HooksInterface
+class Laravel implements BootstrapInterface, HooksInterface, RequestClassProviderInterface
 {
     /**
      * @var string|null The application environment

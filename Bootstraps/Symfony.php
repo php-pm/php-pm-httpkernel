@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * A default bootstrap for the Symfony framework
  */
-class Symfony extends AbstractBootstrap implements HooksInterface
+class Symfony implements BootstrapInterface, HooksInterface
 {
     /**
      * @var string|null The application environment
