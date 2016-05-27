@@ -78,17 +78,20 @@ class HttpKernel implements BridgeInterface
 
         $syRequest = $this->mapRequest($request);
 
-        //start buffering the output, so cgi is not sending any http headers
-        //this is necessary because it would break session handling since
-        //headers_sent() returns true if any unbuffered output reaches cgi stdout.
-        ob_start();
-
         try {
+            // start buffering the output, so cgi is not sending any http headers
+            // this is necessary because it would break session handling since
+            // headers_sent() returns true if any unbuffered output reaches cgi stdout.
+            ob_start();
+
             if ($this->bootstrap instanceof HooksInterface) {
                 $this->bootstrap->preHandle($this->application);
             }
 
             $syResponse = $this->application->handle($syRequest);
+
+			// should not receive output from application->handle()
+            ob_end_clean();
         } catch (\Exception $exception) {
             $response->writeHead(500); // internal server error
             $response->end();
@@ -170,15 +173,10 @@ class HttpKernel implements BridgeInterface
      */
     protected function mapResponse(HttpResponse $reactResponse, SymfonyResponse $syResponse)
     {
-        //end active session
+        // end active session
         if (PHP_SESSION_ACTIVE === session_status()) {
             session_write_close();
-            session_unset(); //reset $_SESSION
-        }
-
-        $content = $syResponse->getContent();
-        if ($syResponse instanceof SymfonyStreamedResponse) {
-            $syResponse->sendContent();
+            session_unset(); // reset $_SESSION
         }
 
         $nativeHeaders = [];
@@ -200,8 +198,8 @@ class HttpKernel implements BridgeInterface
             }
         }
 
-        //after reading all headers we need to reset it, so next request
-        //operates on a clean header.
+        // after reading all headers we need to reset it, so next request
+        // operates on a clean header.
         header_remove();
 
         $headers = array_merge($nativeHeaders, $syResponse->headers->allPreserveCase());
@@ -240,12 +238,22 @@ class HttpKernel implements BridgeInterface
 
         $reactResponse->writeHead($syResponse->getStatusCode(), $headers);
 
-        $stdOut = '';
-        while ($buffer = @ob_get_clean()) {
-            $stdOut .= $buffer;
+        // asynchronously get content
+        ob_start(function($buffer) use ($reactResponse) {
+            $reactResponse->write($buffer);
+            return '';
+        }, 4096);
+
+        if ($syResponse instanceof SymfonyStreamedResponse) {
+            $syResponse->sendContent();
+        }
+        else {
+            echo($syResponse->getContent());
         }
 
-        $reactResponse->end($stdOut . $content);
+        // flush remaining content
+        @ob_end_flush();
+        $reactResponse->end();
     }
 
     /**
