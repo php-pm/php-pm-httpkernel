@@ -90,5 +90,20 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
     public function postHandle($app)
     {
         //reset debugbar if available
+        
+        $this->resetProvider('\Illuminate\Cookie\CookieServiceProvider');
+        $this->resetProvider('\Illuminate\Session\SessionServiceProvider');
+    }
+
+    /**
+    * @param string $providerName
+    */
+    protected function resetProvider($providerName)
+    {
+        if (!$this->app->getProvider($providerName)) {
+            return;
+        }
+
+        $this->app->register($providerName, [], true);
     }
 }
