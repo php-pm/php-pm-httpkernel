@@ -78,25 +78,28 @@ class HttpKernel implements BridgeInterface
 
         $syRequest = $this->mapRequest($request);
 
-        try {
-            // start buffering the output, so cgi is not sending any http headers
-            // this is necessary because it would break session handling since
-            // headers_sent() returns true if any unbuffered output reaches cgi stdout.
-            ob_start();
+        // start buffering the output, so cgi is not sending any http headers
+        // this is necessary because it would break session handling since
+        // headers_sent() returns true if any unbuffered output reaches cgi stdout.
+        ob_start();
 
+        try {
             if ($this->bootstrap instanceof HooksInterface) {
                 $this->bootstrap->preHandle($this->application);
             }
 
             $syResponse = $this->application->handle($syRequest);
-
-			// should not receive output from application->handle()
-            ob_end_clean();
         } catch (\Exception $exception) {
             $response->writeHead(500); // internal server error
             $response->end();
+
+            // end buffering if we need to throw
+            @ob_end_clean();
             throw $exception;
         }
+
+        // should not receive output from application->handle()
+        @ob_end_clean();
 
         $this->mapResponse($response, $syResponse);
 
@@ -236,24 +239,33 @@ class HttpKernel implements BridgeInterface
             $headers['Set-Cookie'] = $cookies;
         }
 
-        $reactResponse->writeHead($syResponse->getStatusCode(), $headers);
-
-        // asynchronously get content
-        ob_start(function($buffer) use ($reactResponse) {
-            $reactResponse->write($buffer);
-            return '';
-        }, 4096);
-
         if ($syResponse instanceof SymfonyStreamedResponse) {
+            $reactResponse->writeHead($syResponse->getStatusCode(), $headers);
+
+            // asynchronously get content
+            ob_start(function($buffer) use ($reactResponse) {
+                $reactResponse->write($buffer);
+                return '';
+            }, 4096);
+
             $syResponse->sendContent();
+
+            // flush remaining content
+            @ob_end_flush();
+            $reactResponse->end();
         }
         else {
-            echo($syResponse->getContent());
-        }
+            ob_start();
+            $content = $syResponse->getContent();
+            @ob_end_flush();
 
-        // flush remaining content
-        @ob_end_flush();
-        $reactResponse->end();
+            if (!isset($headers['Content-Length'])) {
+                $headers['Content-Length'] = strlen($content);
+            }
+
+            $reactResponse->writeHead($syResponse->getStatusCode(), $headers);
+            $reactResponse->end($content);
+        }
     }
 
     /**
