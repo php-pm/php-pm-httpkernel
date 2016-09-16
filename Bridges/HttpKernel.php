@@ -129,8 +129,11 @@ class HttpKernel implements BridgeInterface
 
         $sessionCookieSet = false;
 
-        if (isset($headers['Cookie']) || isset($headers['cookie'])) {
-            $headersCookie = explode(';', isset($headers['Cookie']) ? $headers['Cookie'] : $headers['cookie']);
+        if (isset($headers['cookie'])) {
+            $headersCookie = $headers['cookie'];
+            if (!is_array($headersCookie)) {
+                $headersCookie = [$headersCookie];
+            }
             foreach ($headersCookie as $cookie) {
                 list($name, $value) = explode('=', trim($cookie));
                 $cookies[$name] = $value;
