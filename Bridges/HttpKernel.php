@@ -150,6 +150,23 @@ class HttpKernel implements BridgeInterface
             session_id(Utils::generateSessionId());
         }
 
+        $_SERVER['PHP_AUTH_USER'] = '';
+        $_SERVER['PHP_AUTH_PW'] = '';
+        $_SERVER['AUTH_TYPE'] = '';
+
+        if (isset($headers['Authorization'])) {
+            $authorizationHeader = $headers['Authorization'];
+            $authorizationHeaderParts = explode(' ', $authorizationHeader);
+            $type = $authorizationHeaderParts[0];
+            if (($type === 'Basic' || $type === 'Digest') && isset($authorizationHeaderParts[1])) {
+                $credentials = base64_decode($authorizationHeaderParts[1]);
+                $credentialsParts = explode(':', $credentials);
+                $_SERVER['PHP_AUTH_USER'] = isset($credentialsParts[0]) ? $credentialsParts[0] : '';
+                $_SERVER['PHP_AUTH_PW'] = isset($credentialsParts[1]) ? $credentialsParts[1] : '';
+                $_SERVER['AUTH_TYPE'] = $type;
+            }
+        }
+
         $files = $reactRequest->getFiles();
         $post = $reactRequest->getPost();
 
@@ -163,7 +180,7 @@ class HttpKernel implements BridgeInterface
         $syRequest = new $class($query, $post, $attributes = [], $cookies, $files, $_SERVER, $reactRequest->getBody());
 
         $syRequest->setMethod($method);
-        $syRequest->headers->replace($headers);
+        $syRequest->headers->add($headers);
 
         return $syRequest;
     }
