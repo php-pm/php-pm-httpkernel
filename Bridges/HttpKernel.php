@@ -150,6 +150,20 @@ class HttpKernel implements BridgeInterface
             session_id(Utils::generateSessionId());
         }
 
+        if (isset($headers['Authorization'])) {
+            $authorizationHeader = $headers['Authorization'];
+            $authorizationHeaderParts = explode(' ', $authorizationHeader);
+            $type = $authorizationHeaderParts[0];
+            if (($type === 'Basic' || $type === 'Digest') && isset($authorizationHeaderParts[1])) {
+                $credentials = base64_decode($authorizationHeaderParts[1]);
+                $credentialsParts = explode(':', $credentials);
+                $nativeAuthorizationHeaders['PHP_AUTH_USER'] = isset($credentialsParts[0]) ? $credentialsParts[0] : '';
+                $nativeAuthorizationHeaders['PHP_AUTH_PW'] = isset($credentialsParts[1]) ? $credentialsParts[1] : '';
+                $nativeAuthorizationHeaders['AUTH_TYPE'] = $type;
+                $headers = array_merge($headers, $nativeAuthorizationHeaders);
+            }
+        }
+
         $files = $reactRequest->getFiles();
         $post = $reactRequest->getPost();
 
