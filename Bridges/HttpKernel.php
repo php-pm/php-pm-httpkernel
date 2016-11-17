@@ -10,6 +10,7 @@ use PHPPM\Utils;
 use React\Http\Request as ReactRequest;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse as SymfonyStreamedResponse;
 use Symfony\Component\HttpKernel\TerminableInterface;
@@ -150,9 +151,7 @@ class HttpKernel implements BridgeInterface
             session_id(Utils::generateSessionId());
         }
 
-        $_SERVER['PHP_AUTH_USER'] = '';
-        $_SERVER['PHP_AUTH_PW'] = '';
-        $_SERVER['AUTH_TYPE'] = '';
+        unset($headers['PHP_AUTH_USER'], $headers['PHP_AUTH_PW'], $headers['AUTH_TYPE']);
 
         if (isset($headers['Authorization'])) {
             $authorizationHeader = $headers['Authorization'];
@@ -161,9 +160,9 @@ class HttpKernel implements BridgeInterface
             if (($type === 'Basic' || $type === 'Digest') && isset($authorizationHeaderParts[1])) {
                 $credentials = base64_decode($authorizationHeaderParts[1]);
                 $credentialsParts = explode(':', $credentials);
-                $_SERVER['PHP_AUTH_USER'] = isset($credentialsParts[0]) ? $credentialsParts[0] : '';
-                $_SERVER['PHP_AUTH_PW'] = isset($credentialsParts[1]) ? $credentialsParts[1] : '';
-                $_SERVER['AUTH_TYPE'] = $type;
+                $headers['PHP_AUTH_USER'] = isset($credentialsParts[0]) ? $credentialsParts[0] : '';
+                $headers['PHP_AUTH_PW'] = isset($credentialsParts[1]) ? $credentialsParts[1] : '';
+                $headers['AUTH_TYPE'] = $type;
             }
         }
 
@@ -177,10 +176,11 @@ class HttpKernel implements BridgeInterface
             $class = '\Symfony\Component\HttpFoundation\Request';
         }
 
+        /** @var Request $syRequest */
         $syRequest = new $class($query, $post, $attributes = [], $cookies, $files, $_SERVER, $reactRequest->getBody());
 
         $syRequest->setMethod($method);
-        $syRequest->headers->add($headers);
+        $syRequest->headers->replace($headers);
 
         return $syRequest;
     }
