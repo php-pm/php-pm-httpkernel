@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * A default bootstrap for the Symfony framework
  */
-class Symfony implements BootstrapInterface, HooksInterface
+class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironmentAwareInterface
 {
     /**
      * @var string|null The application environment
@@ -23,8 +23,11 @@ class Symfony implements BootstrapInterface, HooksInterface
 
     /**
      * Instantiate the bootstrap, storing the $appenv
+     *
+     * @param $appenv
+     * @param $debug
      */
-    public function __construct($appenv, $debug)
+    public function initialize($appenv, $debug)
     {
         $this->appenv = $appenv;
         $this->debug = $debug;
