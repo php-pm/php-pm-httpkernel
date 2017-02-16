@@ -8,6 +8,7 @@ use PHPPM\Bootstraps\HooksInterface;
 use PHPPM\Bootstraps\RequestClassProviderInterface;
 use PHPPM\React\HttpResponse;
 use PHPPM\Utils;
+use React\EventLoop\LoopInterface;
 use React\Http\Request as ReactRequest;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
@@ -44,7 +45,7 @@ class HttpKernel implements BridgeInterface
      * @param boolean $debug If debug is enabled
      * @see http://stackphp.com
      */
-    public function bootstrap($appBootstrap, $appenv, $debug)
+    public function bootstrap($appBootstrap, $appenv, $debug, LoopInterface $loop)
     {
         $appBootstrap = $this->normalizeAppBootstrap($appBootstrap);
 
