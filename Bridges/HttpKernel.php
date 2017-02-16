@@ -2,6 +2,7 @@
 
 namespace PHPPM\Bridges;
 
+use PHPPM\Bootstraps\ApplicationEnvironmentAwareInterface;
 use PHPPM\Bootstraps\BootstrapInterface;
 use PHPPM\Bootstraps\HooksInterface;
 use PHPPM\Bootstraps\RequestClassProviderInterface;
@@ -47,7 +48,10 @@ class HttpKernel implements BridgeInterface
     {
         $appBootstrap = $this->normalizeAppBootstrap($appBootstrap);
 
-        $this->bootstrap = new $appBootstrap($appenv, $debug);
+        $this->bootstrap = new $appBootstrap();
+        if ($this->bootstrap instanceof ApplicationEnvironmentAwareInterface) {
+            $this->bootstrap->initialize($appenv, $debug);
+        }
         if ($this->bootstrap instanceof BootstrapInterface) {
             $this->application = $this->bootstrap->getApplication();
         }

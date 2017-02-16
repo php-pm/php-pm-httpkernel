@@ -5,7 +5,8 @@ namespace PHPPM\Bootstraps;
 /**
  * A default bootstrap for the Laravel framework
  */
-class Laravel implements BootstrapInterface, HooksInterface, RequestClassProviderInterface
+class Laravel implements BootstrapInterface, HooksInterface, RequestClassProviderInterface,
+    ApplicationEnvironmentAwareInterface
 {
     /**
      * @var string|null The application environment
@@ -26,9 +27,11 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
 
     /**
      * Instantiate the bootstrap, storing the $appenv
+     *
      * @param string|null $appenv The environment your application will use to bootstrap (if any)
+     * @param $debug
      */
-    public function __construct($appenv, $debug)
+    public function initialize($appenv, $debug)
     {
         $this->appenv = $appenv;
         $this->debug = $debug;

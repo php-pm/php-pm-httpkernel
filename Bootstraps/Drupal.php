@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
  * @see \PHPPM\Bootstraps\Symfony
  * @see \PHPPM\Bridges\HttpKernel
  */
-class Drupal implements BootstrapInterface
+class Drupal implements BootstrapInterface, ApplicationEnvironmentAwareInterface
 {
     /**
      * The PHP environment in which to bootstrap (such as 'dev' or 'production').
@@ -27,9 +27,12 @@ class Drupal implements BootstrapInterface
     protected $debug;
 
     /**
-     * Instantiate the bootstrap, storing the $appenv.
+     * Instantiate the bootstrap, storing the $appenv
+     *
+     * @param $appenv
+     * @param $debug
      */
-    public function __construct($appenv, $debug)
+    public function initialize($appenv, $debug)
     {
         $this->appenv = $appenv;
         $this->debug = $debug;
