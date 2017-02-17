@@ -110,6 +110,10 @@ class HttpKernel implements BridgeInterface
         if ($this->application instanceof TerminableInterface) {
             $this->application->terminate($syRequest, $syResponse);
         }
+        
+        if (is_a($this->application, '\Illuminate\Contracts\Http\Kernel')) {
+            $this->application->terminate($syRequest, $syResponse);
+        }
 
         if ($this->bootstrap instanceof HooksInterface) {
             $this->bootstrap->postHandle($this->application);

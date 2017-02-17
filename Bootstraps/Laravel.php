@@ -76,6 +76,22 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
 
         $kernel = $this->app->make('Illuminate\Contracts\Http\Kernel');
 
+        $this->app->singleton('auth', function() {
+            return new \Illuminate\Auth\AuthManager($this->app);
+        });
+
+        $this->app->afterResolving('auth', function($auth) {
+            $auth->extend('session', function($app, $name, $config) {
+                $provider = $app['auth']->createUserProvider($config['provider']);
+                $guard = new \PHPPM\Laravel\SessionGuard($name, $provider, $app['session.store']);
+                $guard->setCookieJar($app['cookie']);
+                $guard->setDispatcher($app['events']);
+                $guard->setRequest($app->refresh('request', $guard, 'setRequest'));
+
+                return $guard;
+            });
+        });
+
         return $kernel;
     }
 
@@ -93,5 +109,20 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
     public function postHandle($app)
     {
         //reset debugbar if available
+        
+        $this->resetProvider('\Illuminate\Cookie\CookieServiceProvider');
+        $this->resetProvider('\Illuminate\Session\SessionServiceProvider');
+    }
+
+    /**
+    * @param string $providerName
+    */
+    protected function resetProvider($providerName)
+    {
+        if (!$this->app->getProvider($providerName)) {
+            return;
+        }
+
+        $this->app->register($providerName, [], true);
     }
 }
