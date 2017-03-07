@@ -68,6 +68,9 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
         // Laravel 4
         if (file_exists('bootstrap/start.php')) {
             $this->app = require_once 'bootstrap/start.php';
+            $this->app->boot();
+            
+            return $this->app;
         }
 
         if (!$this->app) {
