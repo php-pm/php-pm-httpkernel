@@ -4,7 +4,6 @@ namespace PHPPM\Bootstraps;
 
 use Drupal\Core\DrupalKernel;
 use Drupal\Core\Site\Settings;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * A PHP-PM bootstrap for the Drupal framework.

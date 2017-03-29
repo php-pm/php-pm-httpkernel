@@ -4,7 +4,6 @@ namespace PHPPM\Bootstraps;
 
 use PHPPM\Symfony\StrongerNativeSessionStorage;
 use PHPPM\Utils;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * A default bootstrap for the Symfony framework

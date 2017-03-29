@@ -6,18 +6,25 @@ use PHPPM\Bootstraps\ApplicationEnvironmentAwareInterface;
 use PHPPM\Bootstraps\BootstrapInterface;
 use PHPPM\Bootstraps\HooksInterface;
 use PHPPM\Bootstraps\RequestClassProviderInterface;
-use PHPPM\React\HttpResponse;
-use PHPPM\Utils;
 use React\EventLoop\LoopInterface;
-use React\Http\Request as ReactRequest;
-use Symfony\Component\HttpFoundation\Cookie;
-use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
-use Symfony\Component\HttpFoundation\StreamedResponse as SymfonyStreamedResponse;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Symfony\Bridge\PsrHttpMessage\Factory\DiactorosFactory;
+use Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory;
 use Symfony\Component\HttpKernel\TerminableInterface;
 
 class HttpKernel implements BridgeInterface
 {
+    /**
+     * @var Symfony\Bridge\PsrHttpMessage\HttpMessageFactoryInterface
+     */
+    protected $psrFactory;
+
+    /**
+     * @var Symfony\Bridge\PsrHttpMessage\HttpFoundationFactoryInterface
+     */
+    protected $symfonyFactory;
+
     /**
      * An application implementing the HttpKernelInterface
      *
@@ -47,6 +54,9 @@ class HttpKernel implements BridgeInterface
      */
     public function bootstrap($appBootstrap, $appenv, $debug, LoopInterface $loop)
     {
+        $this->psrFactory = new DiactorosFactory();
+        $this->symfonyFactory = new HttpFoundationFactory();
+
         $appBootstrap = $this->normalizeAppBootstrap($appBootstrap);
 
         $this->bootstrap = new $appBootstrap();
@@ -69,43 +79,23 @@ class HttpKernel implements BridgeInterface
     /**
      * Handle a request using a HttpKernelInterface implementing application.
      *
-     * @param ReactRequest $request
-     * @param HttpResponse $response
-     *
+     * @param RequestInterface $request
+     * @return ResponseInterface
      * @throws \Exception
      */
-    public function onRequest(ReactRequest $request, HttpResponse $response)
+    public function onRequest(RequestInterface $request)
     {
         if (null === $this->application) {
             return;
         }
 
-        $syRequest = $this->mapRequest($request);
+        $syRequest = $symfonyFactory->createRequest($request);
 
-        // start buffering the output, so cgi is not sending any http headers
-        // this is necessary because it would break session handling since
-        // headers_sent() returns true if any unbuffered output reaches cgi stdout.
-        ob_start();
-
-        try {
-            if ($this->bootstrap instanceof HooksInterface) {
-                $this->bootstrap->preHandle($this->application);
-            }
-
-            $syResponse = $this->application->handle($syRequest);
-        } catch (\Exception $exception) {
-            $response->writeHead(500); // internal server error
-            $response->end();
-
-            // end buffering if we need to throw
-            @ob_end_clean();
-            throw $exception;
+        if ($this->bootstrap instanceof HooksInterface) {
+            $this->bootstrap->preHandle($this->application);
         }
 
-        // should not receive output from application->handle()
-        @ob_end_clean();
-
-        $this->mapResponse($response, $syResponse);
+        $syResponse = $this->application->handle($syRequest);
 
         if ($this->application instanceof TerminableInterface) {
             $this->application->terminate($syRequest, $syResponse);
@@ -114,160 +104,8 @@ class HttpKernel implements BridgeInterface
         if ($this->bootstrap instanceof HooksInterface) {
             $this->bootstrap->postHandle($this->application);
         }
-    }
 
-    /**
-     * Convert React\Http\Request to Symfony\Component\HttpFoundation\Request
-     *
-     * @param ReactRequest $reactRequest
-     * @return SymfonyRequest $syRequest
-     */
-    protected function mapRequest(ReactRequest $reactRequest)
-    {
-        $method = $reactRequest->getMethod();
-        $headers = $reactRequest->getHeaders();
-        $query = $reactRequest->getQuery();
-
-        $_COOKIE = [];
-
-        $sessionCookieSet = false;
-
-        if (isset($headers['Cookie']) || isset($headers['cookie'])) {
-            $headersCookie = explode(';', isset($headers['Cookie']) ? $headers['Cookie'] : $headers['cookie']);
-            foreach ($headersCookie as $cookie) {
-                list($name, $value) = explode('=', trim($cookie));
-                $_COOKIE[$name] = $value;
-
-                if ($name === session_name()) {
-                    session_id($value);
-                    $sessionCookieSet = true;
-                }
-            }
-        }
-
-        if (!$sessionCookieSet && session_id()) {
-            //session id already set from the last round but not got from the cookie header,
-            //so generate a new one, since php is not doing it automatically with session_start() if session
-            //has already been started.
-            session_id(Utils::generateSessionId());
-        }
-
-        $files = $reactRequest->getFiles();
-        $post = $reactRequest->getPost();
-
-        if ($this->bootstrap instanceof RequestClassProviderInterface) {
-            $class = $this->bootstrap->requestClass();
-        }
-        else {
-            $class = '\Symfony\Component\HttpFoundation\Request';
-        }
-
-        /** @var SymfonyRequest $syRequest */
-        $syRequest = new $class($query, $post, $attributes = [], $_COOKIE, $files, $_SERVER, $reactRequest->getBody());
-
-        $syRequest->setMethod($method);
-
-        return $syRequest;
-    }
-
-    /**
-     * Convert Symfony\Component\HttpFoundation\Response to React\Http\Response
-     *
-     * @param HttpResponse $reactResponse
-     * @param SymfonyResponse $syResponse
-     */
-    protected function mapResponse(HttpResponse $reactResponse, SymfonyResponse $syResponse)
-    {
-        // end active session
-        if (PHP_SESSION_ACTIVE === session_status()) {
-            session_write_close();
-            session_unset(); // reset $_SESSION
-        }
-
-        $nativeHeaders = [];
-
-        foreach (headers_list() as $header) {
-            if (false !== $pos = strpos($header, ':')) {
-                $name = substr($header, 0, $pos);
-                $value = trim(substr($header, $pos + 1));
-
-                if (isset($nativeHeaders[$name])) {
-                    if (!is_array($nativeHeaders[$name])) {
-                        $nativeHeaders[$name] = [$nativeHeaders[$name]];
-                    }
-
-                    $nativeHeaders[$name][] = $value;
-                } else {
-                    $nativeHeaders[$name] = $value;
-                }
-            }
-        }
-
-        // after reading all headers we need to reset it, so next request
-        // operates on a clean header.
-        header_remove();
-
-        $headers = array_merge($nativeHeaders, $syResponse->headers->allPreserveCase());
-        $cookies = [];
-
-        /** @var Cookie $cookie */
-        foreach ($syResponse->headers->getCookies() as $cookie) {
-            $cookieHeader = sprintf('%s=%s', $cookie->getName(), $cookie->getValue());
-
-            if ($cookie->getPath()) {
-                $cookieHeader .= '; Path=' . $cookie->getPath();
-            }
-            if ($cookie->getDomain()) {
-                $cookieHeader .= '; Domain=' . $cookie->getDomain();
-            }
-
-            if ($cookie->getExpiresTime()) {
-                $cookieHeader .= '; Expires=' . gmdate('D, d-M-Y H:i:s', $cookie->getExpiresTime()). ' GMT';
-            }
-
-            if ($cookie->isSecure()) {
-                $cookieHeader .= '; Secure';
-            }
-            if ($cookie->isHttpOnly()) {
-                $cookieHeader .= '; HttpOnly';
-            }
-
-            $cookies[] = $cookieHeader;
-        }
-
-        if (isset($headers['Set-Cookie'])) {
-            $headers['Set-Cookie'] = array_merge((array)$headers['Set-Cookie'], $cookies);
-        } else {
-            $headers['Set-Cookie'] = $cookies;
-        }
-
-        if ($syResponse instanceof SymfonyStreamedResponse) {
-            $reactResponse->writeHead($syResponse->getStatusCode(), $headers);
-
-            // asynchronously get content
-            ob_start(function($buffer) use ($reactResponse) {
-                $reactResponse->write($buffer);
-                return '';
-            }, 4096);
-
-            $syResponse->sendContent();
-
-            // flush remaining content
-            @ob_end_flush();
-            $reactResponse->end();
-        }
-        else {
-            ob_start();
-            $content = $syResponse->getContent();
-            @ob_end_flush();
-
-            if (!isset($headers['Content-Length'])) {
-                $headers['Content-Length'] = strlen($content);
-            }
-
-            $reactResponse->writeHead($syResponse->getStatusCode(), $headers);
-            $reactResponse->end($content);
-        }
+        return $this->psrFactory->createResponse($syResponse);
     }
 
     /**
