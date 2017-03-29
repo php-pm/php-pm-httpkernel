@@ -3,8 +3,21 @@
     "require": {
         "symfony/http-foundation": "^2.6|^3.0",
         "symfony/http-kernel": "^2.6|^3.0",
-        "php-pm/php-pm": "dev-master"
+        "symfony/psr-http-message-bridge": "^0.2",
+        "zendframework/zend-diactoros": "^1.3",
+        "react/http": "dev-handle-psr7-responses",
+        "php-pm/php-pm": "dev-http_update"
     },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/legionth/http"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/maciejmrozinski/php-pm"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "PHPPM\\": ""
