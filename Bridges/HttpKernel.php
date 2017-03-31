@@ -11,6 +11,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Bridge\PsrHttpMessage\Factory\DiactorosFactory;
 use Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory;
+use Zend\Diactoros\ServerRequest;
 use Symfony\Component\HttpKernel\TerminableInterface;
 
 class HttpKernel implements BridgeInterface
@@ -89,7 +90,30 @@ class HttpKernel implements BridgeInterface
             return;
         }
 
-        $syRequest = $symfonyFactory->createRequest($request);
+        $serverRequest = new ServerRequest(
+            // array $serverParams = [],
+            [],
+            // array $uploadedFiles = [],
+            [],
+            // $uri = null,
+            $request->getUri(),
+            // $method = null,
+            $request->getMethod(),
+            // $body = 'php://input',
+            $request->getBody(),
+            // array $headers = [],
+            $request->getHeaders(),
+            // array $cookies = [],
+            $request->getCookies(),
+            // array $queryParams = [],
+            $request->getQuery(),
+            // $parsedBody = null,
+            null,
+            // $protocol = '1.1'
+            $request->getProtocolVersion()
+        );
+
+        $syRequest = $symfonyFactory->createRequest($serverRequest);
 
         if ($this->bootstrap instanceof HooksInterface) {
             $this->bootstrap->preHandle($this->application);
