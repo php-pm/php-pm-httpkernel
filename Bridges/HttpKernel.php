@@ -7,11 +7,10 @@ use PHPPM\Bootstraps\BootstrapInterface;
 use PHPPM\Bootstraps\HooksInterface;
 use PHPPM\Bootstraps\RequestClassProviderInterface;
 use React\EventLoop\LoopInterface;
-use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Bridge\PsrHttpMessage\Factory\DiactorosFactory;
 use Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory;
-use Zend\Diactoros\ServerRequest;
 use Symfony\Component\HttpKernel\TerminableInterface;
 
 class HttpKernel implements BridgeInterface
@@ -70,50 +69,18 @@ class HttpKernel implements BridgeInterface
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function getStaticDirectory()
-    {
-        return $this->bootstrap->getStaticDirectory();
-    }
-
-    /**
-     * Handle a request using a HttpKernelInterface implementing application.
+     * Dispatch the next available middleware and return the response.
      *
-     * @param RequestInterface $request
+     * @param ServerRequestInterface $request
+     *
      * @return ResponseInterface
-     * @throws \Exception
      */
-    public function onRequest(RequestInterface $request)
-    {
+    public function process(ServerRequestInterface $request) {
         if (null === $this->application) {
             return;
         }
 
-        $serverRequest = new ServerRequest(
-            // array $serverParams = [],
-            [],
-            // array $uploadedFiles = [],
-            [],
-            // $uri = null,
-            $request->getUri(),
-            // $method = null,
-            $request->getMethod(),
-            // $body = 'php://input',
-            $request->getBody(),
-            // array $headers = [],
-            $request->getHeaders(),
-            // array $cookies = [],
-            $request->getCookies(),
-            // array $queryParams = [],
-            $request->getQuery(),
-            // $parsedBody = null,
-            null,
-            // $protocol = '1.1'
-            $request->getProtocolVersion()
-        );
-
-        $syRequest = $symfonyFactory->createRequest($serverRequest);
+        $syRequest = $this->symfonyFactory->createRequest($request);
 
         if ($this->bootstrap instanceof HooksInterface) {
             $this->bootstrap->preHandle($this->application);
