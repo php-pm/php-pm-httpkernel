@@ -50,6 +50,7 @@ class HttpKernel implements BridgeInterface
      * @param string $appBootstrap The name of the class used to bootstrap the application
      * @param string|null $appenv The environment your application will use to bootstrap (if any)
      * @param boolean $debug If debug is enabled
+     * @param LoopInterface $loop React loop
      * @see http://stackphp.com
      */
     public function bootstrap($appBootstrap, $appenv, $debug, LoopInterface $loop)
@@ -62,6 +63,9 @@ class HttpKernel implements BridgeInterface
         $this->bootstrap = new $appBootstrap();
         if ($this->bootstrap instanceof ApplicationEnvironmentAwareInterface) {
             $this->bootstrap->initialize($appenv, $debug);
+        }
+        if ($this->bootstrap instanceof AsyncInterface) {
+            $this->bootstrap->setLoop($loop);
         }
         if ($this->bootstrap instanceof BootstrapInterface) {
             $this->application = $this->bootstrap->getApplication();
