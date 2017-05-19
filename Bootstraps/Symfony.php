@@ -73,7 +73,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
         $nativeStorage = new StrongerNativeSessionStorage(
             $app->getContainer()->getParameter('session.storage.options'),
             $app->getContainer()->has('session.handler') ? $app->getContainer()->get('session.handler'): null,
-            $app->getContainer()->get('session.storage.metadata_bag')
+            $app->getContainer()->get('session.storage')->getMetadataBag()
         );
         $app->getContainer()->set('session.storage.native', $nativeStorage);
 
