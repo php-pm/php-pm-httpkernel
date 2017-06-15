@@ -75,23 +75,59 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
         }
 
         $kernel = $this->app->make('Illuminate\Contracts\Http\Kernel');
+	
+	    $this->app->afterResolving('auth', function($auth) {
+		    $auth->extend('session', function($app, $name, $config) {
+			    $provider = $app['auth']->createUserProvider($config['provider']);
+			    $guard = new \PHPPM\Laravel\SessionGuard($name, $provider, $app['session.store'], null, $app);
+			    $guard->setCookieJar($app['cookie']);
+			    $guard->setDispatcher($app['events']);
+			    $guard->setRequest($app->refresh('request', $guard, 'setRequest'));
+			
+			    return $guard;
+		    });
+	    });
+	    
+	    $app = $this->app;
+	    $this->app->extend('session.store', function() use ($app) {
+		    $manager = $app['session'];
+		    return $manager->driver();
+	    });
+	    
+	    
 
         return $kernel;
     }
-
-    /**
-     * @param \Illuminate\Contracts\Foundation\Application $app
-     */
-    public function preHandle($app)
-    {
-        //reset const LARAVEL_START, to get the correct timing
-    }
-
-    /**
-     * @param \Illuminate\Contracts\Foundation\Application $app
-     */
-    public function postHandle($app)
-    {
-        //reset debugbar if available
-    }
+	
+	/**
+	 * @param \Illuminate\Contracts\Foundation\Application $app
+	 */
+	public function preHandle($app)
+	{
+		//reset const LARAVEL_START, to get the correct timing
+	}
+	
+	/**
+	 * @param \Illuminate\Contracts\Foundation\Application $app
+	 */
+	public function postHandle($app)
+	{
+		//reset debugbar if available
+		
+		$this->resetProvider('\Illuminate\Cookie\CookieServiceProvider');
+		$this->resetProvider('\Illuminate\Session\SessionServiceProvider');
+	}
+	
+	/**
+	 * @param string $providerName
+	 */
+	protected function resetProvider($providerName)
+	{
+		if (!$this->app->getProvider($providerName))
+		{
+			return;
+		}
+		
+		$this->app->register($providerName, [], true);
+	}
 }
