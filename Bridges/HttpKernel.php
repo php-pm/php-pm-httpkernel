@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse as SymfonyStreamedResponse;
 use Symfony\Component\HttpKernel\TerminableInterface;
+use Illuminate\Contracts\Http\Kernel;
 
 class HttpKernel implements BridgeInterface
 {
@@ -111,7 +112,7 @@ class HttpKernel implements BridgeInterface
             $this->application->terminate($syRequest, $syResponse);
         }
 	
-	    if (is_a($this->application, '\Illuminate\Contracts\Http\Kernel')) {
+	    if ($this->application instanceof Kernel) {
 		    $this->application->terminate($syRequest, $syResponse);
 	    }
 
