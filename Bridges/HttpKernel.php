@@ -92,6 +92,10 @@ class HttpKernel implements BridgeInterface
                 $this->bootstrap->preHandle($this->application);
             }
 
+            // trust ppm as proxy
+            $_SERVER['X_FORWARDED_FOR'] = $_SERVER['REMOTE_ADDR'];
+            SymfonyRequest::setTrustedProxies(array('127.0.0.1', '::1'), SymfonyRequest::HEADER_X_FORWARDED_FOR);
+
             $syResponse = $this->application->handle($syRequest);
         } catch (\Exception $exception) {
             $response->writeHead(500); // internal server error
