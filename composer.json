@@ -3,11 +3,17 @@
     "require": {
         "symfony/http-foundation": "^2.6|^3.0",
         "symfony/http-kernel": "^2.6|^3.0",
-        "php-pm/php-pm": "dev-master"
+        "php-pm/php-pm": "dev-amp as dev-master"
     },
     "autoload": {
         "psr-4": {
             "PHPPM\\": ""
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/kelunik/php-pm"
+        }
+    ]
 }
