@@ -2,6 +2,9 @@
 
 namespace PHPPM\Bridges;
 
+use Aerys\BodyParser;
+use function Aerys\parseBody;
+use Aerys\ParsedBody;
 use function Amp\call;
 use Amp\Promise;
 use Amp\Success;
@@ -146,8 +149,36 @@ class HttpKernel implements BridgeInterface
             session_id(Utils::generateSessionId());
         }
 
-        $files = []; // TODO: Support files and POST
+        $contentType = $aerysRequest->getHeader("content-type") ?? "";
+        $content = "";
+        $files = [];
         $post = [];
+
+        $isSimpleForm = strncmp($contentType, "application/x-www-form-urlencoded", \strlen("application/x-www-form-urlencoded"));
+        $isMultipart = preg_match('#^\s*multipart/(?:form-data|mixed)(?:\s*;\s*boundary\s*=\s*("?)([^"]*)\1)?$#', $contentType);
+
+        if ($isMultipart) {
+            /** @var ParsedBody $parsedBody */
+            $parsedBody = yield parseBody($aerysRequest);
+            $parsedData = $parsedBody->getAll();
+            $parsedFields = $parsedData["fields"];
+
+            // Re-parse, because Aerys doesn't build array for foo[bar]=baz
+            \parse_str(\implode("&", \array_map(function (string $field, array $values) {
+                $parts = [];
+
+                foreach ($values as $value) {
+                    $parts[] = \rawurlencode($field) . "=" . \rawurlencode($value);
+                }
+
+                return implode("&", $parts);
+            }, array_keys($parsedData["fields"], $parsedData["fields"]))), $post);
+        } elseif ($isSimpleForm) {
+            $content = yield $aerysRequest->getBody();
+            \parse_str($content, $post);
+        } else {
+            $content = yield $aerysRequest->getBody();
+        }
 
         if ($this->bootstrap instanceof RequestClassProviderInterface) {
             $class = $this->bootstrap->requestClass();
@@ -157,10 +188,8 @@ class HttpKernel implements BridgeInterface
 
         \parse_str($query, $queryParams);
 
-        $body = yield $aerysRequest->getBody();
-
         /** @var SymfonyRequest $syRequest */
-        $syRequest = new $class($queryParams, $post, $attributes = [], $_COOKIE, $files, $_SERVER, $body);
+        $syRequest = new $class($queryParams, $post, $attributes = [], $_COOKIE, $files, $_SERVER, $content);
         $syRequest->setMethod($method);
 
         return $syRequest;
