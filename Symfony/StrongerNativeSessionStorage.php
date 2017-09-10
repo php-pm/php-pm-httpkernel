@@ -2,6 +2,9 @@
 
 namespace PHPPM\Symfony;
 
+use PHPPM\Utils;
+use Symfony\Component\HttpFoundation\Session\Storage\NativeSessionStorage;
+
 /**
  * Since PHP-PM needs to generate its session ids on its own due to the fact that session_destroy()
  * does not reset session_id() nor does it generate a new one for a new session, we need
@@ -9,20 +12,21 @@ namespace PHPPM\Symfony;
  * the weaker session ids from PHP. So we need to overwrite the method regenerate(), to set a better
  * session id afterwards.
  */
-class StrongerNativeSessionStorage extends \Symfony\Component\HttpFoundation\Session\Storage\NativeSessionStorage
+class StrongerNativeSessionStorage extends NativeSessionStorage
 {
     /**
      * {@inheritdoc}
      */
     public function regenerate($destroy = false, $lifetime = null)
     {
-        //since session_regenerate_id also places a setcookie call, we need to deactivate this, to not have
-        //two Set-Cookie headers
+        // since session_regenerate_id also places a setcookie call, we need to deactivate this, to not have
+        // two Set-Cookie headers
         ini_set('session.use_cookies', 0);
+
         if ($isRegenerated = parent::regenerate($destroy, $lifetime)) {
             $params = session_get_cookie_params();
 
-            session_id(\PHPPM\Utils::generateSessionId());
+            session_id(Utils::generateSessionId());
 
             setcookie(
                 session_name(),
@@ -34,9 +38,9 @@ class StrongerNativeSessionStorage extends \Symfony\Component\HttpFoundation\Ses
                 $params['httponly']
             );
         }
+
         ini_set('session.use_cookies', 1);
 
         return $isRegenerated;
     }
-
 }

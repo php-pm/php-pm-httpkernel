@@ -42,14 +42,16 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
     /**
      * {@inheritdoc}
      */
-    public function getStaticDirectory() {
+    public function getStaticDirectory(): string
+    {
         return 'public/';
     }
 
     /**
      * {@inheritdoc}
      */
-    public function requestClass() {
+    public function requestClass()
+    {
         return '\Illuminate\Http\Request';
     }
 

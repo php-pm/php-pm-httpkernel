@@ -36,7 +36,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
     /**
      * @return string
      */
-    public function getStaticDirectory()
+    public function getStaticDirectory(): string
     {
         return 'web/';
     }
