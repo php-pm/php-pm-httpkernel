@@ -161,7 +161,7 @@ class HttpKernel implements BridgeInterface
         $files = [];
         $post = [];
 
-        $isSimpleForm = strncmp($contentType, "application/x-www-form-urlencoded", \strlen("application/x-www-form-urlencoded"));
+        $isSimpleForm = !strncmp($contentType, "application/x-www-form-urlencoded", \strlen("application/x-www-form-urlencoded"));
         $isMultipart = preg_match('#^\s*multipart/(?:form-data|mixed)(?:\s*;\s*boundary\s*=\s*("?)([^"]*)\1)?$#', $contentType);
 
         if ($isMultipart) {
