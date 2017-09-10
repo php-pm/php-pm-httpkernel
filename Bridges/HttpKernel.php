@@ -2,6 +2,8 @@
 
 namespace PHPPM\Bridges;
 
+use Amp\File;
+use Amp\ByteStream;
 use Aerys\BodyParser;
 use function Aerys\parseBody;
 use Aerys\ParsedBody;
@@ -116,6 +118,11 @@ class HttpKernel implements BridgeInterface
             if ($this->bootstrap instanceof HooksInterface) {
                 $this->bootstrap->postHandle($this->application);
             }
+
+            // Delete all files that have not been moved.
+            foreach ($request->getLocalVar("php-pm.files") as $file) {
+                @\unlink($file["tmp_name"]);
+            }
         });
     }
 
@@ -150,7 +157,7 @@ class HttpKernel implements BridgeInterface
         }
 
         $contentType = $aerysRequest->getHeader("content-type") ?? "";
-        $content = "";
+        $content = yield $aerysRequest->getBody();
         $files = [];
         $post = [];
 
@@ -161,7 +168,25 @@ class HttpKernel implements BridgeInterface
             /** @var ParsedBody $parsedBody */
             $parsedBody = yield parseBody($aerysRequest);
             $parsedData = $parsedBody->getAll();
+            $parsedMeta = $parsedData["metadata"];
             $parsedFields = $parsedData["fields"];
+
+            foreach ($parsedMeta as $key => $fileMetas) {
+                $fileMeta = $fileMetas[0]; // TODO: Support for arrays of files with the same name
+                $file = \tempnam(\sys_get_temp_dir(), "aerys-user-upload-");
+
+                yield File\put($file, $parsedFields[$key][0]);
+
+                $files[$key] = [
+                    'name' => $fileMeta['filename'],
+                    'type' => $fileMeta['mime'],
+                    'size' => strlen($parsedFields[$key][0]),
+                    'tmp_name' => $file,
+                    'error' => UPLOAD_ERR_OK,
+                ];
+
+                unset($parsedFields[$key]);
+            }
 
             // Re-parse, because Aerys doesn't build array for foo[bar]=baz
             \parse_str(\implode("&", \array_map(function (string $field, array $values) {
@@ -172,12 +197,9 @@ class HttpKernel implements BridgeInterface
                 }
 
                 return implode("&", $parts);
-            }, array_keys($parsedData["fields"], $parsedData["fields"]))), $post);
+            }, array_keys($parsedFields), $parsedFields)), $post);
         } elseif ($isSimpleForm) {
-            $content = yield $aerysRequest->getBody();
             \parse_str($content, $post);
-        } else {
-            $content = yield $aerysRequest->getBody();
         }
 
         if ($this->bootstrap instanceof RequestClassProviderInterface) {
@@ -191,6 +213,8 @@ class HttpKernel implements BridgeInterface
         /** @var SymfonyRequest $syRequest */
         $syRequest = new $class($queryParams, $post, $attributes = [], $_COOKIE, $files, $_SERVER, $content);
         $syRequest->setMethod($method);
+
+        $aerysRequest->setLocalVar("php-pm.files", $files);
 
         return $syRequest;
     }
