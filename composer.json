@@ -9,5 +9,6 @@
         "psr-4": {
             "PHPPM\\": ""
         }
-    }
+    },
+    "minimum-stability": "dev"
 }
