@@ -58,11 +58,17 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
      */
     public function getApplication()
     {
-        require_once 'bootstrap/autoload.php';
+        if (file_exists('bootstrap/autoload.php')) {
+            require_once 'bootstrap/autoload.php';
+        }
 
         // Laravel 5 / Lumen
+        $isLaravel = true;
         if (file_exists('bootstrap/app.php')) {
             $this->app = require_once 'bootstrap/app.php';
+            if (str_contains($this->app->version(), 'Lumen')) {
+                $isLaravel = false;
+            }
         }
 
         // Laravel 4
@@ -74,7 +80,7 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
             throw new \RuntimeException('Laravel bootstrap file not found');
         }
 
-        $kernel = $this->app->make('Illuminate\Contracts\Http\Kernel');
+        $kernel = $this->app->make($isLaravel ? 'Illuminate\Contracts\Http\Kernel' : 'Laravel\Lumen\Application');
 
         return $kernel;
     }
