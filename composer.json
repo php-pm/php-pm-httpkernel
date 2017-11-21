@@ -1,9 +1,12 @@
 {
     "name": "php-pm/httpkernel-adapter",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "require": {
+        "php-pm/php-pm": "dev-master",
         "symfony/http-foundation": "^2.6|^3.0",
         "symfony/http-kernel": "^2.6|^3.0",
-        "php-pm/php-pm": "dev-master"
+        "ringcentral/psr7": "^1.2"
     },
     "autoload": {
         "psr-4": {
