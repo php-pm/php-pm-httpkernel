@@ -34,14 +34,6 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
     }
 
     /**
-     * @return string
-     */
-    public function getStaticDirectory()
-    {
-        return 'web/';
-    }
-
-    /**
      * Create a Symfony application
      *
      * @return \AppKernel
@@ -58,9 +50,10 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
 
         //since we need to change some services, we need to manually change some services
         $app = new \AppKernel($this->appenv, $this->debug);
+        // We need to change some services, before the boot, because they would 
+        // otherwise be instantiated and passed to other classes which makes it 
+        // impossible to replace them.
 
-        //we need to change some services, before the boot, because they would otherwise
-        //be instantiated and passed to other classes which makes it impossible to replace them.
         Utils::bindAndCall(function() use ($app) {
             // init bundles
             $app->initializeBundles();

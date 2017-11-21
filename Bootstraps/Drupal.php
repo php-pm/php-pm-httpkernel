@@ -39,13 +39,6 @@ class Drupal implements BootstrapInterface, ApplicationEnvironmentAwareInterface
     }
 
     /**
-     * @return string
-     */
-    public function getStaticDirectory() {
-        return './';
-    }
-
-    /**
      * Create a Drupal application.
      */
     public function getApplication()

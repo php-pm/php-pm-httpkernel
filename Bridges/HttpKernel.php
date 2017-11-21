@@ -6,10 +6,11 @@ use PHPPM\Bootstraps\ApplicationEnvironmentAwareInterface;
 use PHPPM\Bootstraps\BootstrapInterface;
 use PHPPM\Bootstraps\HooksInterface;
 use PHPPM\Bootstraps\RequestClassProviderInterface;
-use PHPPM\React\HttpResponse;
 use PHPPM\Utils;
 use React\EventLoop\LoopInterface;
-use React\Http\Request as ReactRequest;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use RingCentral\Psr7;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
@@ -43,7 +44,7 @@ class HttpKernel implements BridgeInterface
      * @param string $appBootstrap The name of the class used to bootstrap the application
      * @param string|null $appenv The environment your application will use to bootstrap (if any)
      * @param boolean $debug If debug is enabled
-     * @see http://stackphp.com
+     * @param LoopInterface $loop Event loop
      */
     public function bootstrap($appBootstrap, $appenv, $debug, LoopInterface $loop)
     {
@@ -61,23 +62,11 @@ class HttpKernel implements BridgeInterface
     /**
      * {@inheritdoc}
      */
-    public function getStaticDirectory()
-    {
-        return $this->bootstrap->getStaticDirectory();
-    }
-
-    /**
-     * Handle a request using a HttpKernelInterface implementing application.
-     *
-     * @param ReactRequest $request
-     * @param HttpResponse $response
-     *
-     * @throws \Exception
-     */
-    public function onRequest(ReactRequest $request, HttpResponse $response)
+    public function handle(ServerRequestInterface $request)
     {
         if (null === $this->application) {
-            return;
+            // internal server error
+            return new Psr7\Response(500, ['Content-type' => 'text/plain'], 'Application not configured during bootstrap');
         }
 
         $syRequest = $this->mapRequest($request);
@@ -94,18 +83,18 @@ class HttpKernel implements BridgeInterface
 
             $syResponse = $this->application->handle($syRequest);
         } catch (\Exception $exception) {
-            $response->writeHead(500); // internal server error
-            $response->end();
+            // internal server error
+            $response = new Psr7\Response(500, ['Content-type' => 'text/plain'], $exception->getMessage());
 
             // end buffering if we need to throw
             @ob_end_clean();
-            throw $exception;
+            return $response;
         }
 
         // should not receive output from application->handle()
         @ob_end_clean();
 
-        $this->mapResponse($response, $syResponse);
+        $response = $this->mapResponse($syResponse);
 
         if ($this->application instanceof TerminableInterface) {
             $this->application->terminate($syRequest, $syResponse);
@@ -114,6 +103,8 @@ class HttpKernel implements BridgeInterface
         if ($this->bootstrap instanceof HooksInterface) {
             $this->bootstrap->postHandle($this->application);
         }
+
+        return $response;
     }
 
     /**
@@ -122,48 +113,51 @@ class HttpKernel implements BridgeInterface
      * @param ReactRequest $reactRequest
      * @return SymfonyRequest $syRequest
      */
-    protected function mapRequest(ReactRequest $reactRequest)
+    protected function mapRequest(ServerRequestInterface $psrRequest)
     {
-        $method = $reactRequest->getMethod();
-        $headers = $reactRequest->getHeaders();
-        $query = $reactRequest->getQuery();
+        $method = $psrRequest->getMethod();
+        $query = $psrRequest->getQueryParams();
 
+        // cookies
         $_COOKIE = [];
-
         $sessionCookieSet = false;
+        $headersCookie = explode(';', $psrRequest->getHeaderLine('Cookie'));
 
-        if (isset($headers['Cookie']) || isset($headers['cookie'])) {
-            $headersCookie = explode(';', isset($headers['Cookie']) ? $headers['Cookie'] : $headers['cookie']);
-            foreach ($headersCookie as $cookie) {
-                list($name, $value) = explode('=', trim($cookie));
-                $_COOKIE[$name] = $value;
+        foreach ($headersCookie as $cookie) {
+            list($name, $value) = explode('=', trim($cookie));
+            $_COOKIE[$name] = $value;
 
-                if ($name === session_name()) {
-                    session_id($value);
-                    $sessionCookieSet = true;
-                }
+            if ($name === session_name()) {
+                session_id($value);
+                $sessionCookieSet = true;
             }
         }
 
         if (!$sessionCookieSet && session_id()) {
-            //session id already set from the last round but not got from the cookie header,
-            //so generate a new one, since php is not doing it automatically with session_start() if session
-            //has already been started.
+            // session id already set from the last round but not obtained
+            // from the cookie header, so generate a new one, since php is
+            // not doing it automatically with session_start() if session
+            // has already been started.
             session_id(Utils::generateSessionId());
         }
 
-        $files = $reactRequest->getFiles();
-        $post = $reactRequest->getPost();
+        // files
+        $files = $psrRequest->getUploadedFiles();
+
+        // @todo check howto handle additional headers
+
+        // @todo check howto support other HTTP methods with bodies
+        $post = $psrRequest->getParsedBody() ?: array();
 
         if ($this->bootstrap instanceof RequestClassProviderInterface) {
             $class = $this->bootstrap->requestClass();
         }
         else {
-            $class = '\Symfony\Component\HttpFoundation\Request';
+            $class = SymfonyRequest::class;
         }
 
         /** @var SymfonyRequest $syRequest */
-        $syRequest = new $class($query, $post, $attributes = [], $_COOKIE, $files, $_SERVER, $reactRequest->getBody());
+        $syRequest = new $class($query, $post, $attributes = [], $_COOKIE, $files, $_SERVER, $psrRequest->getBody());
 
         $syRequest->setMethod($method);
 
@@ -173,10 +167,10 @@ class HttpKernel implements BridgeInterface
     /**
      * Convert Symfony\Component\HttpFoundation\Response to React\Http\Response
      *
-     * @param HttpResponse $reactResponse
      * @param SymfonyResponse $syResponse
+     « @return ResponseInterface
      */
-    protected function mapResponse(HttpResponse $reactResponse, SymfonyResponse $syResponse)
+    protected function mapResponse(SymfonyResponse $syResponse)
     {
         // end active session
         if (PHP_SESSION_ACTIVE === session_status()) {
@@ -241,33 +235,27 @@ class HttpKernel implements BridgeInterface
             $headers['Set-Cookie'] = $cookies;
         }
 
+        $psrResponse = new Psr7\Response($syResponse->getStatusCode(), $headers);
+
+        // get contents
+        ob_start();
         if ($syResponse instanceof SymfonyStreamedResponse) {
-            $reactResponse->writeHead($syResponse->getStatusCode(), $headers);
-
-            // asynchronously get content
-            ob_start(function($buffer) use ($reactResponse) {
-                $reactResponse->write($buffer);
-                return '';
-            }, 4096);
-
             $syResponse->sendContent();
-
-            // flush remaining content
-            @ob_end_flush();
-            $reactResponse->end();
+            $content = @ob_get_clean();
         }
         else {
             ob_start();
             $content = $syResponse->getContent();
             @ob_end_flush();
-
-            if (!isset($headers['Content-Length'])) {
-                $headers['Content-Length'] = strlen($content);
-            }
-
-            $reactResponse->writeHead($syResponse->getStatusCode(), $headers);
-            $reactResponse->end($content);
         }
+
+        if (!isset($headers['Content-Length'])) {
+            $psrResponse = $psrResponse->withAddedHeader('Content-Length', strlen($content));
+        }
+
+        $psrResponse = $psrResponse->withBody(Psr7\stream_for($content));
+
+        return $psrResponse;
     }
 
     /**
