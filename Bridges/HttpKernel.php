@@ -7,7 +7,6 @@ use PHPPM\Bootstraps\BootstrapInterface;
 use PHPPM\Bootstraps\HooksInterface;
 use PHPPM\Bootstraps\RequestClassProviderInterface;
 use PHPPM\Utils;
-use React\EventLoop\LoopInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use RingCentral\Psr7;
@@ -44,9 +43,8 @@ class HttpKernel implements BridgeInterface
      * @param string $appBootstrap The name of the class used to bootstrap the application
      * @param string|null $appenv The environment your application will use to bootstrap (if any)
      * @param boolean $debug If debug is enabled
-     * @param LoopInterface $loop Event loop
      */
-    public function bootstrap($appBootstrap, $appenv, $debug, LoopInterface $loop)
+    public function bootstrap($appBootstrap, $appenv, $debug)
     {
         $appBootstrap = $this->normalizeAppBootstrap($appBootstrap);
 
