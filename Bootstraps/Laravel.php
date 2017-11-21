@@ -66,7 +66,7 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
         $isLaravel = true;
         if (file_exists('bootstrap/app.php')) {
             $this->app = require_once 'bootstrap/app.php';
-            if (str_contains($this->app->version(), 'Lumen')) {
+            if (substr($this->app->version(), 0, 5) === 'Lumen') {
                 $isLaravel = false;
             }
         }
