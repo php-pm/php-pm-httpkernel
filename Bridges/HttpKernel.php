@@ -119,15 +119,18 @@ class HttpKernel implements BridgeInterface
         // cookies
         $_COOKIE = [];
         $sessionCookieSet = false;
-        $headersCookie = explode(';', $psrRequest->getHeaderLine('Cookie'));
 
-        foreach ($headersCookie as $cookie) {
-            list($name, $value) = explode('=', trim($cookie));
-            $_COOKIE[$name] = $value;
+        foreach ($psrRequest->getHeader('Cookie') as $cookieHeader) {
+            $cookies = explode(';', $cookieHeader);
 
-            if ($name === session_name()) {
-                session_id($value);
-                $sessionCookieSet = true;
+            foreach ($cookies as $cookie) {
+                list($name, $value) = explode('=', trim($cookie));
+                $_COOKIE[$name] = $value;
+
+                if ($name === session_name()) {
+                    session_id($value);
+                    $sessionCookieSet = true;
+                }
             }
         }
 
