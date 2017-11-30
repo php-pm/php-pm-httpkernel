@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "b0772d73425829b5145e93c09e7c24b9",
+    "content-hash": "f16fa0f5190565aeb947dad03a1ea2f4",
     "packages": [
         {
             "name": "evenement/evenement",
@@ -282,17 +282,18 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-pm/php-pm.git",
-                "reference": "66b7f702b29ca8d96af9c21b5c9f5dbeb1537e4d"
+                "reference": "cd12ed86ac4d043d584cb1717a2bae64b576c1a0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-pm/php-pm/zipball/66b7f702b29ca8d96af9c21b5c9f5dbeb1537e4d",
-                "reference": "66b7f702b29ca8d96af9c21b5c9f5dbeb1537e4d",
+                "url": "https://api.github.com/repos/php-pm/php-pm/zipball/cd12ed86ac4d043d584cb1717a2bae64b576c1a0",
+                "reference": "cd12ed86ac4d043d584cb1717a2bae64b576c1a0",
                 "shasum": ""
             },
             "require": {
+                "ext-pcntl": "*",
                 "http-interop/http-middleware": "^0.5",
-                "mkraemer/react-pcntl": "^2.0",
+                "mkraemer/react-pcntl": "^2.0|^3.0",
                 "monolog/monolog": "^1.3",
                 "paragonie/random_compat": "^2.0",
                 "php": ">=5.6.0",
@@ -330,7 +331,7 @@
             "license": [
                 "MIT"
             ],
-            "time": "2017-11-21T19:16:17+00:00"
+            "time": "2017-11-30T07:21:18+00:00"
         },
         {
             "name": "psr/http-message",
@@ -1346,9 +1347,7 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "php-pm/php-pm": 20
-    },
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": [],
