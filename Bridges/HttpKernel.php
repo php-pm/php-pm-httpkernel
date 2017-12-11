@@ -169,7 +169,7 @@ class HttpKernel implements BridgeInterface
      * Convert Symfony\Component\HttpFoundation\Response to React\Http\Response
      *
      * @param SymfonyResponse $syResponse
-     « @return ResponseInterface
+     * @return ResponseInterface
      */
     protected function mapResponse(SymfonyResponse $syResponse)
     {
