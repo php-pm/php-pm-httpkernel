@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * A PHP-PM bootstrap for the Drupal framework.
  *
- * @see \PHPPM\Bootstraps\Symfony
+ * @see \PHPPM\Bootstraps\AbstractSymfony
  * @see \PHPPM\Bridges\HttpKernel
  */
 class Drupal implements BootstrapInterface, ApplicationEnvironmentAwareInterface
