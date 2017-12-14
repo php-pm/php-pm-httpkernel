@@ -5,6 +5,7 @@ namespace PHPPM\Bootstraps;
 use PHPPM\Symfony\StrongerNativeSessionStorage;
 use PHPPM\Utils;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Dotenv\Dotenv;
 
 /**
  * A default bootstrap for the Symfony framework
@@ -48,8 +49,15 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
             require './vendor/autoload.php';
         }
 
-        //since we need to change some services, we need to manually change some services
-        $app = new \AppKernel($this->appenv, $this->debug);
+        // since we need to change some services, we need to manually change some services
+        $class = class_exists('\AppKernel') ? '\AppKernel' : '\App\Kernel';
+        $app = new $class($this->appenv, $this->debug);
+
+        // environment loading as of Symfony 3.3
+        if (class_exists('\Symfony\Component\Dotenv\Dotenv')) {
+            $this->loadEnvironment('.env');
+        }
+
         // We need to change some services, before the boot, because they would 
         // otherwise be instantiated and passed to other classes which makes it 
         // impossible to replace them.
@@ -189,6 +197,19 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
                 $logger->clear();
             }
         }
+    }
 
+    /**
+     * Load environment variables from .env file
+     * @param string $env the enviroment file
+     */
+    protected function loadEnvironment($env)
+    {
+        // if Symfony is at root folder
+        $path = __DIR__ . '/../../../../' . $env;
+
+        if (file_exists($path)) {
+            (new Dotenv())->load($path);
+        }
     }
 }
