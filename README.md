@@ -4,7 +4,7 @@ HttpKernel adapter for use of Symfony and Laravel frameworks with PHP-PM. See ht
 
 ### Setup
 
-  1. Install PHP-PM
+  1. Install PHP-PM (is not mandatory)
 
         composer require php-pm/php-pm:dev-master
 

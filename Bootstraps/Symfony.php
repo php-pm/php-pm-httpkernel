@@ -5,6 +5,7 @@ namespace PHPPM\Bootstraps;
 use PHPPM\Symfony\StrongerNativeSessionStorage;
 use PHPPM\Utils;
 use Symfony\Component\HttpFoundation\Request;
+use function PHPPM\register_file;
 
 /**
  * A default bootstrap for the Symfony framework
@@ -113,7 +114,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
             $twigLoader = $container->get('twig.loader');
             Utils::bindAndCall(function() use ($twigLoader) {
                 foreach ($twigLoader->cache as $path) {
-                    ppm_register_file($path);
+                    register_file($path);
                 }
             }, $twigLoader);
         }
