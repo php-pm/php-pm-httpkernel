@@ -6,11 +6,11 @@ HttpKernel adapter for use of Symfony and Laravel frameworks with PHP-PM. See ht
 
   1. Install PHP-PM
 
-        composer require php-pm/php-pm:dev-master
+          composer require php-pm/php-pm:dev-master
 
   2. Install HttpKernel Adapter
 
-        composer require php-pm/httpkernel-adapter:dev-master
+          composer require php-pm/httpkernel-adapter:dev-master
 
 > **Note**: For Symfony, make sure your `AppKernel` is autoloaded in your
 > `composer.json` (shouldn't be an issue for projects created using the Standard
