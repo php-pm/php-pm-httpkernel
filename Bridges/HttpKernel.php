@@ -31,6 +31,11 @@ class HttpKernel implements BridgeInterface
     protected $bootstrap;
 
     /**
+     * @var string[]
+     */
+    protected $tempFiles = [];
+
+    /**
      * Bootstrap an application implementing the HttpKernelInterface.
      *
      * In the process of bootstrapping we decorate our application with any number of
@@ -82,7 +87,8 @@ class HttpKernel implements BridgeInterface
             $syResponse = $this->application->handle($syRequest);
         } catch (\Exception $exception) {
             // internal server error
-            $response = new Psr7\Response(500, ['Content-type' => 'text/plain'], $exception->getMessage());
+            error_log((string)$exception);
+            $response = new Psr7\Response(500, ['Content-type' => 'text/plain'], 'Unexpected error');
 
             // end buffering if we need to throw
             @ob_end_clean();
@@ -142,8 +148,30 @@ class HttpKernel implements BridgeInterface
             session_id(Utils::generateSessionId());
         }
 
-        // files
-        $files = $psrRequest->getUploadedFiles();
+        /** @var \React\Http\Io\UploadedFile $file */
+        $uploadedFiles = $psrRequest->getUploadedFiles();
+
+        $mapFiles = function(&$files) use (&$mapFiles) {
+            foreach ($files as &$value) {
+                if (is_array($value)) {
+                    $mapFiles($value);
+                } else if ($value instanceof \React\Http\Io\UploadedFile) {
+                    $tmpname = tempnam(sys_get_temp_dir(), 'upload');
+                    $this->tempFiles[] = $tmpname;
+
+                    file_put_contents($tmpname, (string)$value->getStream());
+                    $value = new \Symfony\Component\HttpFoundation\File\UploadedFile(
+                        $tmpname,
+                        $value->getClientFilename(),
+                        $value->getClientMediaType(),
+                        $value->getSize(),
+                        $value->getError(),
+                        true
+                    );
+                }
+            }
+        };
+        $mapFiles($uploadedFiles);
 
         // @todo check howto handle additional headers
 
@@ -158,7 +186,7 @@ class HttpKernel implements BridgeInterface
         }
 
         /** @var SymfonyRequest $syRequest */
-        $syRequest = new $class($query, $post, $attributes = [], $_COOKIE, $files, $_SERVER, $psrRequest->getBody());
+        $syRequest = new $class($query, $post, $attributes = [], $_COOKIE, $uploadedFiles, $_SERVER, $psrRequest->getBody());
 
         $syRequest->setMethod($method);
 
@@ -255,6 +283,12 @@ class HttpKernel implements BridgeInterface
         }
 
         $psrResponse = $psrResponse->withBody(Psr7\stream_for($content));
+
+        foreach ($this->tempFiles as $tmpname) {
+            if (file_exists($tmpname)) {
+                unlink($tmpname);
+            }
+        }
 
         return $psrResponse;
     }

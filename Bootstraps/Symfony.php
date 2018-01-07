@@ -49,8 +49,16 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
             require './vendor/autoload.php';
         }
 
+        // environment loading as of Symfony 3.3
+        if (!getenv('APP_ENV') && class_exists('Symfony\Component\Dotenv\Dotenv') && file_exists(realpath('.env'))) {
+            (new \Symfony\Component\Dotenv\Dotenv())->load(realpath('.env'));
+        }
+
+        $class = class_exists('\AppKernel') ? '\AppKernel' : '\App\Kernel';
+
         //since we need to change some services, we need to manually change some services
-        $app = new \AppKernel($this->appenv, $this->debug);
+        $app = new $class($this->appenv, $this->debug);
+
         // We need to change some services, before the boot, because they would 
         // otherwise be instantiated and passed to other classes which makes it 
         // impossible to replace them.
@@ -66,8 +74,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
         //now we can modify the container
         $nativeStorage = new StrongerNativeSessionStorage(
             $app->getContainer()->getParameter('session.storage.options'),
-            $app->getContainer()->has('session.handler') ? $app->getContainer()->get('session.handler'): null,
-            $app->getContainer()->get('session.storage.metadata_bag')
+            $app->getContainer()->has('session.handler') ? $app->getContainer()->get('session.handler'): null
         );
         $app->getContainer()->set('session.storage.native', $nativeStorage);
 
