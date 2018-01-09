@@ -53,6 +53,8 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
     {
         if (file_exists('bootstrap/autoload.php')) {
             require_once 'bootstrap/autoload.php';
+        } else if (file_exists('vendor/autoload.php')) {
+            require_once 'vendor/autoload.php';
         }
 
         // Laravel 5 / Lumen
