@@ -159,15 +159,21 @@ class HttpKernel implements BridgeInterface
                     $tmpname = tempnam(sys_get_temp_dir(), 'upload');
                     $this->tempFiles[] = $tmpname;
 
-                    file_put_contents($tmpname, (string)$value->getStream());
-                    $value = new \Symfony\Component\HttpFoundation\File\UploadedFile(
-                        $tmpname,
-                        $value->getClientFilename(),
-                        $value->getClientMediaType(),
-                        $value->getSize(),
-                        $value->getError(),
-                        true
-                    );
+                    if (UPLOAD_ERR_NO_FILE == $value->getError()) {
+                        $value = null;
+                    } else {
+                        if (UPLOAD_ERR_OK == $value->getError()) {
+                            file_put_contents($tmpname, (string)$value->getStream());
+                        }
+                        $value = new \Symfony\Component\HttpFoundation\File\UploadedFile(
+                            $tmpname,
+                            $value->getClientFilename(),
+                            $value->getClientMediaType(),
+                            $value->getSize(),
+                            $value->getError(),
+                            true
+                        );
+                    }
                 }
             }
         };
