@@ -9,12 +9,15 @@ use PHPPM\Bootstraps\RequestClassProviderInterface;
 use PHPPM\Utils;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UploadedFileInterface;
 use RingCentral\Psr7;
 use Symfony\Component\HttpFoundation\Cookie;
+use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyFile;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse as SymfonyStreamedResponse;
 use Symfony\Component\HttpKernel\TerminableInterface;
+
 
 class HttpKernel implements BridgeInterface
 {
@@ -152,25 +155,25 @@ class HttpKernel implements BridgeInterface
         $uploadedFiles = $psrRequest->getUploadedFiles();
 
         $mapFiles = function(&$files) use (&$mapFiles) {
-            foreach ($files as &$value) {
-                if (is_array($value)) {
-                    $mapFiles($value);
-                } else if ($value instanceof \React\Http\Io\UploadedFile) {
+            foreach ($files as &$file) {
+                if (is_array($file)) {
+                    $mapFiles($file);
+                } else if ($file instanceof UploadedFileInterface) {
                     $tmpname = tempnam(sys_get_temp_dir(), 'upload');
                     $this->tempFiles[] = $tmpname;
 
-                    if (UPLOAD_ERR_NO_FILE == $value->getError()) {
-                        $value = null;
+                    if (UPLOAD_ERR_NO_FILE == $file->getError()) {
+                        $file = null;
                     } else {
-                        if (UPLOAD_ERR_OK == $value->getError()) {
-                            file_put_contents($tmpname, (string)$value->getStream());
+                        if (UPLOAD_ERR_OK == $file->getError()) {
+                            file_put_contents($tmpname, (string)$file->getStream());
                         }
-                        $value = new \Symfony\Component\HttpFoundation\File\UploadedFile(
+                        $file = new SymfonyFile(
                             $tmpname,
-                            $value->getClientFilename(),
-                            $value->getClientMediaType(),
-                            $value->getSize(),
-                            $value->getError(),
+                            $file->getClientFilename(),
+                            $file->getClientMediaType(),
+                            $file->getSize(),
+                            $file->getError(),
                             true
                         );
                     }
