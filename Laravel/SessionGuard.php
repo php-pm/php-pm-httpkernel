@@ -5,7 +5,7 @@ namespace PHPPM\Laravel;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Foundation\Application;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Illuminate\Contracts\Session\Session;
 
 class SessionGuard extends \Illuminate\Auth\SessionGuard
 {
@@ -21,15 +21,15 @@ class SessionGuard extends \Illuminate\Auth\SessionGuard
      * Create a new authentication guard.
      *
      * @param  string  $name
-     * @param  \Illuminate\Contracts\Auth\UserProvider  $provider
-     * @param  \Symfony\Component\HttpFoundation\Session\SessionInterface  $session
-     * @param  \Symfony\Component\HttpFoundation\Request  $request
-     * @param  mixed|\Illuminate\Foundation\Application $app
+     * @param  \Illuminate\Contracts\Auth\UserProvider   $provider
+     * @param  \Illuminate\Contracts\Session\Session     $session
+     * @param  \Symfony\Component\HttpFoundation\Request $request
+     * @param  mixed|\Illuminate\Foundation\Application  $app
      * @return void
      */
     public function __construct($name,
         UserProvider $provider,
-        SessionInterface $session,
+        Session $session,
         Request $request = null,
         Application $app)
     {
