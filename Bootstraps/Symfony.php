@@ -170,7 +170,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
             if ($container->has('logger')) {
                 $logger = $container->get('logger');
                 Utils::bindAndCall(function () {
-                    if ($debugLogger = $this->getDebugLogger()) {
+                    if (\method_exists($this, 'getDebugLogger') && $debugLogger = $this->getDebugLogger()) {
                         //DebugLogger
                         Utils::hijackProperty($debugLogger, 'records', []);
                     }
