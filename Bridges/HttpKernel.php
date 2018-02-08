@@ -138,6 +138,9 @@ class HttpKernel implements BridgeInterface
             $cookies = explode(';', $cookieHeader);
 
             foreach ($cookies as $cookie) {
+                if (strpos($cookie, '=') == false) {
+                    continue;
+                }
                 list($name, $value) = explode('=', trim($cookie));
                 $_COOKIE[$name] = $value;
 
