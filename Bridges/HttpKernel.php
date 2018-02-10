@@ -6,7 +6,6 @@ use PHPPM\Bootstraps\ApplicationEnvironmentAwareInterface;
 use PHPPM\Bootstraps\BootstrapInterface;
 use PHPPM\Bootstraps\HooksInterface;
 use PHPPM\Bootstraps\RequestClassProviderInterface;
-use PHPPM\Utils;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use RingCentral\Psr7;
@@ -95,10 +94,8 @@ class HttpKernel implements BridgeInterface
             return $response;
         }
 
-        // should not receive output from application->handle()
-        @ob_end_clean();
-
-        $response = $this->mapResponse($syResponse);
+        $out = ob_get_clean();
+        $response = $this->mapResponse($syResponse, $out);
 
         if ($this->application instanceof TerminableInterface) {
             $this->application->terminate($syRequest, $syResponse);
@@ -114,7 +111,8 @@ class HttpKernel implements BridgeInterface
     /**
      * Convert React\Http\Request to Symfony\Component\HttpFoundation\Request
      *
-     * @param ReactRequest $reactRequest
+     * @param ServerRequestInterface $psrRequest
+     *
      * @return SymfonyRequest $syRequest
      */
     protected function mapRequest(ServerRequestInterface $psrRequest)
@@ -124,7 +122,6 @@ class HttpKernel implements BridgeInterface
 
         // cookies
         $_COOKIE = [];
-        $sessionCookieSet = false;
 
         foreach ($psrRequest->getHeader('Cookie') as $cookieHeader) {
             $cookies = explode(';', $cookieHeader);
@@ -135,17 +132,8 @@ class HttpKernel implements BridgeInterface
 
                 if ($name === session_name()) {
                     session_id($value);
-                    $sessionCookieSet = true;
                 }
             }
-        }
-
-        if (!$sessionCookieSet && session_id()) {
-            // session id already set from the last round but not obtained
-            // from the cookie header, so generate a new one, since php is
-            // not doing it automatically with session_start() if session
-            // has already been started.
-            session_id(Utils::generateSessionId());
         }
 
         /** @var \React\Http\Io\UploadedFile $file */
@@ -174,7 +162,6 @@ class HttpKernel implements BridgeInterface
         $mapFiles($uploadedFiles);
 
         // @todo check howto handle additional headers
-
         // @todo check howto support other HTTP methods with bodies
         $post = $psrRequest->getParsedBody() ?: array();
 
@@ -197,15 +184,25 @@ class HttpKernel implements BridgeInterface
      * Convert Symfony\Component\HttpFoundation\Response to React\Http\Response
      *
      * @param SymfonyResponse $syResponse
+     * @param string          $stdout     Additional stdout that was catched during handling a request.
+     *
      * @return ResponseInterface
      */
-    protected function mapResponse(SymfonyResponse $syResponse)
+    protected function mapResponse(SymfonyResponse $syResponse, $stdout='')
     {
         // end active session
         if (PHP_SESSION_ACTIVE === session_status()) {
+            // make sure open session are saved to the storage
+            // in case the framework hasn't closed it correctly.
             session_write_close();
-            session_unset(); // reset $_SESSION
         }
+
+        // reset session_id in any case to something not valid, for next request
+        session_id('');
+
+        //reset $_SESSION
+        session_unset();
+        unset($_SESSION);
 
         $nativeHeaders = [];
 
@@ -276,6 +273,10 @@ class HttpKernel implements BridgeInterface
             ob_start();
             $content = $syResponse->getContent();
             @ob_end_flush();
+        }
+
+        if ($stdout) {
+            $content = $stdout . $content;
         }
 
         if (!isset($headers['Content-Length'])) {

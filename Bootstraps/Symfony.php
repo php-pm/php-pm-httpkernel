@@ -71,13 +71,6 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
             $app->initializeContainer();
         }, $app);
 
-        //now we can modify the container
-        $nativeStorage = new StrongerNativeSessionStorage(
-            $app->getContainer()->getParameter('session.storage.options'),
-            $app->getContainer()->has('session.handler') ? $app->getContainer()->get('session.handler'): null
-        );
-        $app->getContainer()->set('session.storage.native', $nativeStorage);
-
         Utils::bindAndCall(function() use ($app) {
             foreach ($app->getBundles() as $bundle) {
                 $bundle->setContainer($app->container);
