@@ -8,12 +8,16 @@ use PHPPM\Bootstraps\HooksInterface;
 use PHPPM\Bootstraps\RequestClassProviderInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UploadedFileInterface;
 use RingCentral\Psr7;
 use Symfony\Component\HttpFoundation\Cookie;
+use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyFile;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse as SymfonyStreamedResponse;
 use Symfony\Component\HttpKernel\TerminableInterface;
+use Illuminate\Contracts\Http\Kernel;
+
 
 class HttpKernel implements BridgeInterface
 {
@@ -100,6 +104,10 @@ class HttpKernel implements BridgeInterface
         if ($this->application instanceof TerminableInterface) {
             $this->application->terminate($syRequest, $syResponse);
         }
+        
+        if ($this->application instanceof Kernel) {
+            $this->application->terminate($syRequest, $syResponse);
+        }
 
         if ($this->bootstrap instanceof HooksInterface) {
             $this->bootstrap->postHandle($this->application);
@@ -127,6 +135,9 @@ class HttpKernel implements BridgeInterface
             $cookies = explode(';', $cookieHeader);
 
             foreach ($cookies as $cookie) {
+                if (strpos($cookie, '=') == false) {
+                    continue;
+                }
                 list($name, $value) = explode('=', trim($cookie));
                 $_COOKIE[$name] = $value;
 
@@ -140,22 +151,28 @@ class HttpKernel implements BridgeInterface
         $uploadedFiles = $psrRequest->getUploadedFiles();
 
         $mapFiles = function(&$files) use (&$mapFiles) {
-            foreach ($files as &$value) {
-                if (is_array($value)) {
-                    $mapFiles($value);
-                } else if ($value instanceof \React\Http\Io\UploadedFile) {
+            foreach ($files as &$file) {
+                if (is_array($file)) {
+                    $mapFiles($file);
+                } else if ($file instanceof UploadedFileInterface) {
                     $tmpname = tempnam(sys_get_temp_dir(), 'upload');
                     $this->tempFiles[] = $tmpname;
 
-                    file_put_contents($tmpname, (string)$value->getStream());
-                    $value = new \Symfony\Component\HttpFoundation\File\UploadedFile(
-                        $tmpname,
-                        $value->getClientFilename(),
-                        $value->getClientMediaType(),
-                        $value->getSize(),
-                        $value->getError(),
-                        true
-                    );
+                    if (UPLOAD_ERR_NO_FILE == $file->getError()) {
+                        $file = null;
+                    } else {
+                        if (UPLOAD_ERR_OK == $file->getError()) {
+                            file_put_contents($tmpname, (string)$file->getStream());
+                        }
+                        $file = new SymfonyFile(
+                            $tmpname,
+                            $file->getClientFilename(),
+                            $file->getClientMediaType(),
+                            $file->getSize(),
+                            $file->getError(),
+                            true
+                        );
+                    }
                 }
             }
         };
