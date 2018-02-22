@@ -3,8 +3,8 @@
     "license": "MIT",
     "require": {
         "php-pm/php-pm": "^1.0",
-        "symfony/http-foundation": "^2.6|^3.0",
-        "symfony/http-kernel": "^2.6|^3.0",
+        "symfony/http-foundation": "^2.6|^3.0|^4",
+        "symfony/http-kernel": "^2.6|^3.0|^4",
         "ringcentral/psr7": "^1.2"
     },
     "autoload": {
