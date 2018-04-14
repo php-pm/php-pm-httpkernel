@@ -44,7 +44,11 @@ class Drupal implements BootstrapInterface, ApplicationEnvironmentAwareInterface
     public function getApplication()
     {
         //load drupals autoload.php, so their classes are available
-        $autoloader = require './vendor/autoload.php';
+        if (file_exists('./vendor/autoload.php')) {
+            $autoloader = require './vendor/autoload.php';
+        } else {
+            $autoloader = require '../vendor/autoload.php';
+        }
 
         $sitePath = 'sites/default';
 
