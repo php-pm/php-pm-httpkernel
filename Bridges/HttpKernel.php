@@ -262,6 +262,10 @@ class HttpKernel implements BridgeInterface
                 $cookieHeader .= '; Expires=' . gmdate('D, d-M-Y H:i:s', $cookie->getExpiresTime()). ' GMT';
             }
 
+            if ($cookie->getMaxAge()) {
+                $cookieHeader .= '; Max-Age=' . $cookie->getMaxAge();
+            }
+
             if ($cookie->isSecure()) {
                 $cookieHeader .= '; Secure';
             }
