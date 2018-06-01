@@ -113,11 +113,15 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
      * @param \Illuminate\Contracts\Foundation\Application $app
      */
     public function postHandle($app)
-    {
-        //reset debugbar if available
-
-        $this->resetProvider('\Illuminate\Cookie\CookieServiceProvider');
-        $this->resetProvider('\Illuminate\Session\SessionServiceProvider');
+    {   
+        //check if this is a lumen framework, if so, do not reset
+        //note that lumen does not have the getProvider method
+        if (method_exists($this->app, 'getProvider')) {
+            //reset debugbar if available
+            $this->resetProvider('\Illuminate\Cookie\CookieServiceProvider');
+            $this->resetProvider('\Illuminate\Session\SessionServiceProvider');
+        }
+       
     }
 
     /**
