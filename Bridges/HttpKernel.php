@@ -104,7 +104,7 @@ class HttpKernel implements BridgeInterface
         if ($this->application instanceof TerminableInterface) {
             $this->application->terminate($syRequest, $syResponse);
         }
-        
+
         if ($this->application instanceof Kernel) {
             $this->application->terminate($syRequest, $syResponse);
         }
@@ -291,7 +291,6 @@ class HttpKernel implements BridgeInterface
             $content = @ob_get_clean();
         }
         else {
-            ob_start();
             $content = $syResponse->getContent();
             @ob_end_flush();
         }
