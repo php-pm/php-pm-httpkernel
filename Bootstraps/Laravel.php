@@ -84,9 +84,15 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
             $auth->extend('session', function($app, $name, $config) {
                 $provider = $app['auth']->createUserProvider($config['provider']);
                 $guard = new \PHPPM\Laravel\SessionGuard($name, $provider, $app['session.store'], null, $app);
-                $guard->setCookieJar($app['cookie']);
-                $guard->setDispatcher($app['events']);
-                $guard->setRequest($app->refresh('request', $guard, 'setRequest'));
+                if (method_exists($guard, 'setCookieJar')) {
+                    $guard->setCookieJar($this->app['cookie']);
+                }
+                if (method_exists($guard, 'setDispatcher')) {
+                    $guard->setDispatcher($this->app['events']);
+                }
+                if (method_exists($guard, 'setRequest')) {
+                    $guard->setRequest($this->app->refresh('request', $guard, 'setRequest'));
+                }
 
                 return $guard;
             });
@@ -118,6 +124,7 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
         //note that lumen does not have the getProvider method
         if (method_exists($this->app, 'getProvider')) {
             //reset debugbar if available
+            $this->resetProvider('\Illuminate\Redis\RedisServiceProvider');
             $this->resetProvider('\Illuminate\Cookie\CookieServiceProvider');
             $this->resetProvider('\Illuminate\Session\SessionServiceProvider');
         }
