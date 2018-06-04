@@ -56,7 +56,27 @@ class SessionGuard extends \Illuminate\Auth\SessionGuard
 
         return parent::setRequest($request);
     }
+    
+    /**
+     * Get a unique identifier for the auth session value.
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return 'login_'.$this->name.'_'.sha1(parent::class);
+    }
 
+    /**
+     * Get the name of the cookie used to store the "recaller".
+     *
+     * @return string
+     */
+    public function getRecallerName()
+    {
+        return 'remember_'.$this->name.'_'.sha1(parent::class);
+    }
+    
     /**
      * Reset the state of current class instance.
      *
@@ -69,5 +89,6 @@ class SessionGuard extends \Illuminate\Auth\SessionGuard
         $this->viaRemember = false;
         $this->loggedOut = false;
         $this->tokenRetrievalAttempted = false;
+        $this->recallAttempted  = false;
     }
 }
