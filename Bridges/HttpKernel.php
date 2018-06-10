@@ -276,8 +276,8 @@ class HttpKernel implements BridgeInterface
             $cookies[] = $cookieHeader;
         }
 
-        if (isset($headers['Set-Cookie'])) {
-            $headers['Set-Cookie'] = array_merge((array)$headers['Set-Cookie'], $cookies);
+        if (isset($nativeHeaders['Set-Cookie'])) {
+            $headers['Set-Cookie'] = array_merge((array)$nativeHeaders['Set-Cookie'], $cookies);
         } else {
             $headers['Set-Cookie'] = $cookies;
         }
