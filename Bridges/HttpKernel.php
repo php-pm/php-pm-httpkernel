@@ -159,7 +159,13 @@ class HttpKernel implements BridgeInterface
                     $this->tempFiles[] = $tmpname;
 
                     if (UPLOAD_ERR_NO_FILE == $file->getError()) {
-                        $file = null;
+                        $file = [
+                            'error' => $file->getError(),
+                            'name' => $file->getClientFilename(),
+                            'size' => $file->getSize(),
+                            'tmp_name' => $tmpname,
+                            'type' => $file->getClientMediaType()
+                        ];
                     } else {
                         if (UPLOAD_ERR_OK == $file->getError()) {
                             file_put_contents($tmpname, (string)$file->getStream());
