@@ -315,7 +315,7 @@ class HttpKernel implements BridgeInterface
     }
 
     /**
-     * @param $appBootstrap
+     * @param string $appBootstrap
      * @return string
      * @throws \RuntimeException
      */

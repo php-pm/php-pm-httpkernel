@@ -21,7 +21,7 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
     /**
      * Store the application
      *
-     * @var \Symfony\Component\HttpKernel\HttpKernelInterface
+     * @var \Illuminate\Foundation\Application;
      */
     protected $app;
 
@@ -29,7 +29,7 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
      * Instantiate the bootstrap, storing the $appenv
      *
      * @param string|null $appenv The environment your application will use to bootstrap (if any)
-     * @param $debug
+     * @param boolean $debug
      */
     public function initialize($appenv, $debug)
     {

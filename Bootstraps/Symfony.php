@@ -25,8 +25,8 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
     /**
      * Instantiate the bootstrap, storing the $appenv
      *
-     * @param $appenv
-     * @param $debug
+     * @param string $appenv
+     * @param boolean $debug
      */
     public function initialize($appenv, $debug)
     {

@@ -1,2 +1,4 @@
 parameters:
     ignoreErrors:
+    	- '#Access to an undefined property PHPPM\\Bootstraps\\Symfony::\$.*#'
+    	
