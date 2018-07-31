@@ -24,7 +24,7 @@ class Laravel implements
     /**
      * Store the application
      *
-     * @var \Illuminate\Foundation\Application;
+     * @var \Illuminate\Foundation\Application|null
      */
     protected $app;
 
