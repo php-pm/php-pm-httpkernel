@@ -5,7 +5,10 @@ namespace PHPPM\Bootstraps;
 /**
  * A default bootstrap for the Laravel framework
  */
-class Laravel implements BootstrapInterface, HooksInterface, RequestClassProviderInterface,
+class Laravel implements
+    BootstrapInterface,
+    HooksInterface,
+    RequestClassProviderInterface,
     ApplicationEnvironmentAwareInterface
 {
     /**
@@ -42,7 +45,8 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
     /**
      * {@inheritdoc}
      */
-    public function requestClass() {
+    public function requestClass()
+    {
         return '\Illuminate\Http\Request';
     }
 
@@ -53,7 +57,7 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
     {
         if (file_exists('bootstrap/autoload.php')) {
             require_once 'bootstrap/autoload.php';
-        } else if (file_exists('vendor/autoload.php')) {
+        } elseif (file_exists('vendor/autoload.php')) {
             require_once 'vendor/autoload.php';
         }
 
@@ -80,8 +84,8 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
 
         $kernel = $this->app->make($isLaravel ? 'Illuminate\Contracts\Http\Kernel' : 'Laravel\Lumen\Application');
 
-        $this->app->afterResolving('auth', function($auth) {
-            $auth->extend('session', function($app, $name, $config) {
+        $this->app->afterResolving('auth', function ($auth) {
+            $auth->extend('session', function ($app, $name, $config) {
                 $provider = $app['auth']->createUserProvider($config['provider']);
                 $guard = new \PHPPM\Laravel\SessionGuard($name, $provider, $app['session.store'], null, $app);
                 if (method_exists($guard, 'setCookieJar')) {
@@ -99,7 +103,7 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
         });
 
         $app = $this->app;
-        $this->app->extend('session.store', function() use ($app) {
+        $this->app->extend('session.store', function () use ($app) {
             $manager = $app['session'];
             return $manager->driver();
         });
@@ -119,7 +123,7 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
      * @param \Illuminate\Contracts\Foundation\Application $app
      */
     public function postHandle($app)
-    {   
+    {
         //check if this is a lumen framework, if so, do not reset
         //note that lumen does not have the getProvider method
         if (method_exists($this->app, 'getProvider')) {
@@ -128,7 +132,6 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
             $this->resetProvider('\Illuminate\Cookie\CookieServiceProvider');
             $this->resetProvider('\Illuminate\Session\SessionServiceProvider');
         }
-       
     }
 
     /**
@@ -136,8 +139,7 @@ class Laravel implements BootstrapInterface, HooksInterface, RequestClassProvide
      */
     protected function resetProvider($providerName)
     {
-        if (!$this->app->getProvider($providerName))
-        {
+        if (!$this->app->getProvider($providerName)) {
             return;
         }
 
