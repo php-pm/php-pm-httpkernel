@@ -25,8 +25,8 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
     /**
      * Instantiate the bootstrap, storing the $appenv
      *
-     * @param $appenv
-     * @param $debug
+     * @param string $appenv
+     * @param boolean $debug
      */
     public function initialize($appenv, $debug)
     {
@@ -59,11 +59,11 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
         //since we need to change some services, we need to manually change some services
         $app = new $class($this->appenv, $this->debug);
 
-        // We need to change some services, before the boot, because they would 
-        // otherwise be instantiated and passed to other classes which makes it 
+        // We need to change some services, before the boot, because they would
+        // otherwise be instantiated and passed to other classes which makes it
         // impossible to replace them.
 
-        Utils::bindAndCall(function() use ($app) {
+        Utils::bindAndCall(function () use ($app) {
             // init bundles
             $app->initializeBundles();
 
@@ -71,7 +71,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
             $app->initializeContainer();
         }, $app);
 
-        Utils::bindAndCall(function() use ($app) {
+        Utils::bindAndCall(function () use ($app) {
             foreach ($app->getBundles() as $bundle) {
                 $bundle->setContainer($app->container);
                 $bundle->boot();
@@ -120,7 +120,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
         //->Twig_Loader_Filesystem
         if ($container->has('twig.loader')) {
             $twigLoader = $container->get('twig.loader');
-            Utils::bindAndCall(function() use ($twigLoader) {
+            Utils::bindAndCall(function () use ($twigLoader) {
                 foreach ($twigLoader->cache as $path) {
                     register_file($path);
                 }
@@ -146,7 +146,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
             if ($profiler->has('db')) {
                 Utils::bindAndCall(function () {
                     //$logger: \Doctrine\DBAL\Logging\DebugStack
-                    foreach ($this->loggers as $logger){
+                    foreach ($this->loggers as $logger) {
                         Utils::hijackProperty($logger, 'queries', []);
                     }
                 }, $profiler->get('db'), null, 'Symfony\Bridge\Doctrine\DataCollector\DoctrineDataCollector');
@@ -154,10 +154,10 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
 
             //EventDataCollector
             if ($profiler->has('events')) {
-                Utils::hijackProperty($profiler->get('events'), 'data', array(
-                    'called_listeners' => array(),
-                    'not_called_listeners' => array(),
-                ));
+                Utils::hijackProperty($profiler->get('events'), 'data', [
+                    'called_listeners' => [],
+                    'not_called_listeners' => [],
+                ]);
             }
 
             //TwigDataCollector
@@ -198,6 +198,5 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
                 $logger->clear();
             }
         }
-
     }
 }

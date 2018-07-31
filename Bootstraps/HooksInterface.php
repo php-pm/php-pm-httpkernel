@@ -2,7 +2,8 @@
 
 namespace PHPPM\Bootstraps;
 
-interface HooksInterface {
+interface HooksInterface
+{
     public function preHandle($app);
     public function postHandle($app);
 }

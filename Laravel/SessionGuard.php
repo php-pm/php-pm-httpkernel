@@ -24,15 +24,16 @@ class SessionGuard extends \Illuminate\Auth\SessionGuard
      * @param  \Illuminate\Contracts\Auth\UserProvider   $provider
      * @param  \Illuminate\Contracts\Session\Session     $session
      * @param  \Symfony\Component\HttpFoundation\Request $request
-     * @param  mixed|\Illuminate\Foundation\Application  $app
+     * @param  \Illuminate\Foundation\Application  $app
      * @return void
      */
-    public function __construct($name,
+    public function __construct(
+        $name,
         UserProvider $provider,
         Session $session,
         Request $request = null,
-        Application $app)
-    {
+        Application $app
+    ) {
         $this->name = $name;
         $this->session = $session;
         $this->request = $request;

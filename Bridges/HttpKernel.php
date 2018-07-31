@@ -18,7 +18,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse as SymfonyStreamedResponse
 use Symfony\Component\HttpKernel\TerminableInterface;
 use Illuminate\Contracts\Http\Kernel;
 
-
 class HttpKernel implements BridgeInterface
 {
     /**
@@ -150,11 +149,11 @@ class HttpKernel implements BridgeInterface
         /** @var \React\Http\Io\UploadedFile $file */
         $uploadedFiles = $psrRequest->getUploadedFiles();
 
-        $mapFiles = function(&$files) use (&$mapFiles) {
+        $mapFiles = function (&$files) use (&$mapFiles) {
             foreach ($files as &$file) {
                 if (is_array($file)) {
                     $mapFiles($file);
-                } else if ($file instanceof UploadedFileInterface) {
+                } elseif ($file instanceof UploadedFileInterface) {
                     $tmpname = tempnam(sys_get_temp_dir(), 'upload');
                     $this->tempFiles[] = $tmpname;
 
@@ -186,12 +185,11 @@ class HttpKernel implements BridgeInterface
 
         // @todo check howto handle additional headers
         // @todo check howto support other HTTP methods with bodies
-        $post = $psrRequest->getParsedBody() ?: array();
+        $post = $psrRequest->getParsedBody() ?: [];
 
         if ($this->bootstrap instanceof RequestClassProviderInterface) {
             $class = $this->bootstrap->requestClass();
-        }
-        else {
+        } else {
             $class = SymfonyRequest::class;
         }
 
@@ -295,8 +293,7 @@ class HttpKernel implements BridgeInterface
         if ($syResponse instanceof SymfonyStreamedResponse) {
             $syResponse->sendContent();
             $content = @ob_get_clean();
-        }
-        else {
+        } else {
             $content = $syResponse->getContent();
             @ob_end_flush();
         }
@@ -321,7 +318,7 @@ class HttpKernel implements BridgeInterface
     }
 
     /**
-     * @param $appBootstrap
+     * @param string $appBootstrap
      * @return string
      * @throws \RuntimeException
      */

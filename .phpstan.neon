@@ -1,0 +1,10 @@
+parameters:
+    ignoreErrors:
+    	- '#Access to an undefined property PHPPM\\Bootstraps\\Symfony::\$.*#'
+    	- '#invalid type AppKernel#'
+    	- '#invalid typehint type AppKernel#'
+    	- '#unknown class AppKernel#'
+    	- '#unknown class Drupal.Core#'
+    	- '#Instantiated class Drupal.Core#'
+    	- '#PHPPM.Laravel.SessionGuard#'
+    	- '#Property Illuminate.Auth.SessionGuard#'
