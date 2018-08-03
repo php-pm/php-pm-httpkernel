@@ -46,7 +46,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
         if (file_exists($appAutoLoader)) {
             require $appAutoLoader;
         } else {
-            require './vendor/autoload.php';
+            require $this->getVendorDir().'/autoload.php';
         }
 
         // environment loading as of Symfony 3.3
@@ -89,6 +89,20 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
         }
 
         return $app;
+    }
+    
+    /**
+    * Returns the vendor directory containing autoload.php
+    *
+    * @return string
+    */
+    protected function getVendorDir()
+    {
+        if(getenv('COMPOSER_VENDOR_DIR') && file_exists(getenv('COMPOSER_VENDOR_DIR'))) {
+            return getenv('COMPOSER_VENDOR_DIR');
+        } else {
+            return './vendor';
+        }
     }
 
     /**
