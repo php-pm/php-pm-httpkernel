@@ -111,7 +111,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
     {
         $container = $app->getContainer();
 
-        if ($container->has('debug.stopwatch')) {
+        if ($container->has('doctrine')) {
             $em = $container->get("doctrine");
             if (!$em->getManager()->isOpen()) {
                 $em->resetManager();
