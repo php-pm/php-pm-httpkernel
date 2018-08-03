@@ -98,7 +98,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
     */
     protected function getVendorDir()
     {
-        if(getenv('COMPOSER_VENDOR_DIR') && file_exists(getenv('COMPOSER_VENDOR_DIR'))) {
+        if (getenv('COMPOSER_VENDOR_DIR') && file_exists(getenv('COMPOSER_VENDOR_DIR'))) {
             return getenv('COMPOSER_VENDOR_DIR');
         } else {
             return './vendor';
