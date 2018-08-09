@@ -54,7 +54,9 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
             (new \Symfony\Component\Dotenv\Dotenv())->load(realpath('.env'));
         }
 
-        $class = class_exists('\AppKernel') ? '\AppKernel' : '\App\Kernel';
+	    $namespace = getenv('APP_KERNEL_NAMESPACE') ?: '\App\\';
+	    $fqcn = $namespace . (getenv('APP_KERNEL_CLASS_NAME') ?: 'Kernel');
+	    $class = class_exists($fqcn) ? $fqcn : '\AppKernel';
 
         //since we need to change some services, we need to manually change some services
         $app = new $class($this->appenv, $this->debug);
