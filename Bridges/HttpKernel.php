@@ -190,7 +190,7 @@ class HttpKernel implements BridgeInterface
         }
 
         /** @var SymfonyRequest $syRequest */
-        $syRequest = new $class($query, $post, $attributes = [], $_COOKIE, $uploadedFiles, $_SERVER, $psrRequest->getBody());
+        $syRequest = new $class($query, $post, $attributes = [], $_COOKIE, $uploadedFiles, $_SERVER, (string)$psrRequest->getBody());
 
         $syRequest->setMethod($method);
 
