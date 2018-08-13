@@ -12,6 +12,10 @@ HttpKernel adapter for use of Symfony and Laravel frameworks with PHP-PM. See ht
 
           composer require php-pm/httpkernel-adapter
 
+  3. Optionally provide the namespace of your Kernel using the `APP_KERNEL_NAMESPACE` environment variable. 
+  Example: `APP_KERNEL_NAMESPACE=Acme\MyProduct\`. This will attempt to use the class `Acme\MyProduct\Kernel` 
+  as the fully qualified class name
+
 > **Note**: For Symfony, make sure your `AppKernel` is autoloaded in your
 > `composer.json` (shouldn't be an issue for projects created using the Standard
 > Edition after November 2015):
