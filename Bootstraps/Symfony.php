@@ -59,7 +59,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
         $fqcn      = $namespace . (getenv('APP_KERNEL_CLASS_NAME') ?: 'Kernel');
         $class     = class_exists($fqcn) ? $fqcn : '\AppKernel';
 
-        if(!class_exists($class)){
+        if (!class_exists($class)) {
         	throw new \Exception("Symfony Kernel class was not found in the configured locations. Given: '$class'");
         }
 
