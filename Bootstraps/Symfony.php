@@ -38,6 +38,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
      * Create a Symfony application
      *
      * @return \AppKernel
+     * @throws \Exception
      */
     public function getApplication()
     {
@@ -54,7 +55,13 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
             (new \Symfony\Component\Dotenv\Dotenv())->load(realpath('.env'));
         }
 
-        $class = class_exists('\AppKernel') ? '\AppKernel' : '\App\Kernel';
+        $namespace = getenv('APP_KERNEL_NAMESPACE') ?: '\App\\';
+        $fqcn      = $namespace . (getenv('APP_KERNEL_CLASS_NAME') ?: 'Kernel');
+        $class     = class_exists($fqcn) ? $fqcn : '\AppKernel';
+
+        if (!class_exists($class)) {
+            throw new \Exception("Symfony Kernel class was not found in the configured locations. Given: '$class'");
+        }
 
         //since we need to change some services, we need to manually change some services
         $app = new $class($this->appenv, $this->debug);
