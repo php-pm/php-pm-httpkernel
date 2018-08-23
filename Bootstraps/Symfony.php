@@ -136,8 +136,9 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
             $em = $container->get("doctrine");
             if (!$em->getManager()->isOpen()) {
                 $em->resetManager();
+            } else {
+                $em->getManager()->clear();
             }
-            $em->getManager()->clear();
         }
 
         //resets stopwatch, so it can correctly calculate the execution time
