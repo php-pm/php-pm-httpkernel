@@ -137,6 +137,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
             if (!$em->getManager()->isOpen()) {
                 $em->resetManager();
             }
+            $em->getManager()->clear();
         }
 
         //resets stopwatch, so it can correctly calculate the execution time
