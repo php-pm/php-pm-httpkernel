@@ -2,9 +2,9 @@
     "name": "php-pm/httpkernel-adapter",
     "license": "MIT",
     "require": {
-        "php-pm/php-pm": "^1.0.5",
-        "symfony/http-foundation": "^3.4|^4",
-        "symfony/http-kernel": "^3.4|^4",
+        "php-pm/php-pm": "^2.0",
+        "symfony/http-foundation": "^2.6|^3.0|^4",
+        "symfony/http-kernel": "^2.6|^3.0|^4",
         "guzzlehttp/psr7": "^1.5"
     },
     "require-dev": {
