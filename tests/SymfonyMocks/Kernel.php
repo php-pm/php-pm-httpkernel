@@ -26,11 +26,19 @@ class Kernel
 
     public function getBundles()
     {
+        if (!$this->bundlesInitialized) {
+            throw new \Exception('Bundles not initialized');
+        }
+
         return [];
     }
 
     public function getContainer()
     {
+        if (!$this->containerInitialized) {
+            throw new \Exception('Container not initialized');
+        }
+
         return new Container();
     }
 
