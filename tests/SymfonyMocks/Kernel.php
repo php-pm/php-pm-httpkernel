@@ -1,10 +1,12 @@
 <?php
 
 namespace PHPPM\Tests\SymfonyMocks;
+
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class Kernel {
+class Kernel
+{
     private $bundlesInitialized = false;
     private $containerInitialized = false;
 
@@ -24,7 +26,7 @@ class Kernel {
 
     public function getBundles()
     {
-        return array();
+        return [];
     }
 
     public function getContainer()
@@ -34,10 +36,10 @@ class Kernel {
 
     public function handle(Request $request)
     {
-        if(!$this->bundlesInitialized) {
+        if (!$this->bundlesInitialized) {
             throw new \Exception('Bundles not initialized');
         }
-        if(!$this->containerInitialized) {
+        if (!$this->containerInitialized) {
             throw new \Exception('Container not initialized');
         }
 
