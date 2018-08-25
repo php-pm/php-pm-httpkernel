@@ -44,13 +44,22 @@ class Kernel
         }
 
         if ($request->getMethod() == 'POST') {
-            $mappedFileNames = array_map(function ($f) {
-                if (!isset($f)) {
-                    return 'NULL';
+            if(count($request->files->all()) > 0) {
+                $mappedFileNames = array_map(function ($f) {
+                    if (!isset($f)) {
+                        return 'NULL';
+                    }
+                    return $f->getClientOriginalName();
+                }, $request->files->all());
+                return new Response('Uploaded files: '.implode(',', $mappedFileNames), 201);
+            }
+            if($request->getContentType() == 'json') {
+                $body = json_decode($request->getContent(), true);
+                if ($request->getContent() == null || !$body) {
+                    throw new \Exception('Invalid JSON body');
                 }
-                return $f->getClientOriginalName();
-            }, $request->files->all());
-            return new Response('Uploaded files: '.implode(',', $mappedFileNames), 201);
+                return new Response('Received JSON: '.$request->getContent(), 201);
+            }
         } elseif ($request->getMethod() == 'GET') {
             // Simple get request
             return new Response('Success', 200);
