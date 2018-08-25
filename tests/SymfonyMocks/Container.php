@@ -2,7 +2,8 @@
 
 namespace PHPPM\Tests\SymfonyMocks;
 
-class Container {
+class Container
+{
     public function has($service)
     {
         return false;
