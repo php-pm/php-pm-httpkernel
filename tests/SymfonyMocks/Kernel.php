@@ -34,8 +34,12 @@ class Kernel {
 
     public function handle(Request $request)
     {
-        if(!$this->bundlesInitialized) { throw new \Exception('Bundles not initialized'); }
-        if(!$this->containerInitialized) { throw new \Exception('Container not initialized'); }
+        if(!$this->bundlesInitialized) {
+            throw new \Exception('Bundles not initialized');
+        }
+        if(!$this->containerInitialized) {
+            throw new \Exception('Container not initialized');
+        }
 
         // Simple get request
         return new Response('Success', 200);
