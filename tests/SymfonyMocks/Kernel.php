@@ -44,7 +44,7 @@ class Kernel
         }
 
         if ($request->getMethod() == 'POST') {
-            if(count($request->files->all()) > 0) {
+            if (count($request->files->all()) > 0) {
                 $mappedFileNames = array_map(function ($f) {
                     if (!isset($f)) {
                         return 'NULL';
@@ -53,7 +53,7 @@ class Kernel
                 }, $request->files->all());
                 return new Response('Uploaded files: '.implode(',', $mappedFileNames), 201);
             }
-            if($request->getContentType() == 'json') {
+            if ($request->getContentType() == 'json') {
                 $body = json_decode($request->getContent(), true);
                 if ($request->getContent() == null || !$body) {
                     throw new \Exception('Invalid JSON body');
