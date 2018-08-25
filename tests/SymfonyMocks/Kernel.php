@@ -8,25 +8,32 @@ class Kernel {
     private $bundlesInitialized = false;
     private $containerInitialized = false;
 
-    public function __construct($env, $debug) {}
+    public function __construct($env, $debug)
+    {
+    }
 
-    public function initializeBundles() {
+    public function initializeBundles()
+    {
         $this->bundlesInitialized = true;
     }
 
-    public function initializeContainer() {
+    public function initializeContainer()
+    {
         $this->containerInitialized = true;
     }
 
-    public function getBundles() {
+    public function getBundles()
+    {
         return array();
     }
 
-    public function getContainer() {
+    public function getContainer()
+    {
         return new Container();
     }
 
-    public function handle(Request $request) {
+    public function handle(Request $request)
+    {
         if(!$this->bundlesInitialized) { throw new \Exception('Bundles not initialized'); }
         if(!$this->containerInitialized) { throw new \Exception('Container not initialized'); }
 
