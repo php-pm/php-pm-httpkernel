@@ -44,12 +44,14 @@ class Kernel
         }
 
         if ($request->getMethod() == 'POST') {
-            $mappedFileNames = array_map(function($f) {
-                if(!isset($f)) { return 'NULL'; }
+            $mappedFileNames = array_map(function ($f) {
+                if (!isset($f)) {
+                    return 'NULL';
+                }
                 return $f->getClientOriginalName();
             }, $request->files->all());
             return new Response('Uploaded files: '.implode(',', $mappedFileNames), 201);
-        } else if ($request->getMethod() == 'GET') {
+        } elseif ($request->getMethod() == 'GET') {
             // Simple get request
             return new Response('Success', 200);
         }
