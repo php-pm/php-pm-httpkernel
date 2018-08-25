@@ -20,9 +20,9 @@ class SymfonyBootstrapTest extends TestCase
         $request = $this
             ->getMockBuilder(ServerRequestInterface::class)
             ->getMock();
-        $request->method('getHeader')->with('Cookie')->willReturn(array());
-        $request->method('getUploadedFiles')->willReturn(array());
-        $request->method('getQueryParams')->willReturn(array());
+        $request->method('getHeader')->with('Cookie')->willReturn([]);
+        $request->method('getUploadedFiles')->willReturn([]);
+        $request->method('getQueryParams')->willReturn([]);
         $request->method('getMethod')->willReturn('GET');
         
         $response = $bridge->handle($request);
