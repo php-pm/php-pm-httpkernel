@@ -7,9 +7,13 @@
         "symfony/http-kernel": "^2.6|^3.0|^4",
         "ringcentral/psr7": "^1.2"
     },
+    "require-dev": {
+        "phpunit/phpunit": "^5.7"
+    },
     "autoload": {
         "psr-4": {
-            "PHPPM\\": ""
+            "PHPPM\\": "",
+            "PHPPM\\Tests\\": "tests"
         }
     }
 }

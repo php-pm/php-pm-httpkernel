@@ -19,6 +19,8 @@ jobs:
         # dependencies for phpstan
         - composer require --dev "symfony/symfony" "laravel/framework" "drupal/drupal"
       script:
+        # Unit test
+        - ./vendor/bin/phpunit
         # Static analyzer check
         - ./vendor/bin/phpstan analyze -c .phpstan.neon --level=4 --no-progress Bootstraps Bridges Laravel || true
         # Check the code style
