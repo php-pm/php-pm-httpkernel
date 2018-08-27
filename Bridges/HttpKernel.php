@@ -81,21 +81,11 @@ class HttpKernel implements BridgeInterface
         // headers_sent() returns true if any unbuffered output reaches cgi stdout.
         ob_start();
 
-        try {
-            if ($this->bootstrap instanceof HooksInterface) {
-                $this->bootstrap->preHandle($this->application);
-            }
-
-            $syResponse = $this->application->handle($syRequest);
-        } catch (\Exception $exception) {
-            // internal server error
-            error_log((string)$exception);
-            $response = new Psr7\Response(500, ['Content-type' => 'text/plain'], 'Unexpected error');
-
-            // end buffering if we need to throw
-            @ob_end_clean();
-            return $response;
+        if ($this->bootstrap instanceof HooksInterface) {
+            $this->bootstrap->preHandle($this->application);
         }
+
+        $syResponse = $this->application->handle($syRequest);
 
         $out = ob_get_clean();
         $response = $this->mapResponse($syResponse, $out);
