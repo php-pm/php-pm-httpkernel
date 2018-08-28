@@ -14,7 +14,6 @@ use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyFile;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
-use Symfony\Component\HttpFoundation\StreamedResponse as SymfonyStreamedResponse;
 use Symfony\Component\HttpKernel\TerminableInterface;
 use Illuminate\Contracts\Http\Kernel;
 
@@ -290,7 +289,8 @@ class HttpKernel implements BridgeInterface
 
         // get contents
         ob_start();
-        if ($syResponse instanceof SymfonyStreamedResponse) {
+        $content = $syResponse->getContent();
+        if ($content === false) {
             $syResponse->sendContent();
             $content = @ob_get_clean();
         } else {
