@@ -289,14 +289,8 @@ class HttpKernel implements BridgeInterface
 
         // get contents
         ob_start();
-        $content = $syResponse->getContent();
-        if ($content === false) {
-            $syResponse->sendContent();
-            $content = @ob_get_clean();
-        } else {
-            $content = $syResponse->getContent();
-            @ob_end_flush();
-        }
+        $syResponse->sendContent();
+        $content = @ob_get_clean();
 
         if ($stdout) {
             $content = $stdout . $content;
