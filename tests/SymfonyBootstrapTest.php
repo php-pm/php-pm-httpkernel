@@ -83,4 +83,26 @@ class SymfonyBootstrapTest extends TestCase
         $this->assertEquals(201, $response->getStatusCode());
         $this->assertEquals('Received JSON: {"some_json_array":[{"map1":"value1"},{"map2":"value2"}]}', (string)$response->getBody());
     }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testStreamedResponse()
+    {
+        putenv('APP_KERNEL_NAMESPACE=PHPPM\\Tests\\SymfonyMocks\\');
+        $bridge = new HttpKernel();
+        $bridge->bootstrap('Symfony', 'test', true);
+
+        $request = $this->getMockBuilder(ServerRequestInterface::class)->getMock();
+        $request->method('getHeader')->with('Cookie')->willReturn([]);
+        $request->method('getQueryParams')->willReturn([]);
+        $request->method('getUploadedFiles')->willReturn([]);
+        $request->method('getMethod')->willReturn('GET');
+
+        $_SERVER['REQUEST_URI'] = '/streamed';
+
+        $response = $bridge->handle($request);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('streamed data', (string)$response->getBody());
+    }
 }

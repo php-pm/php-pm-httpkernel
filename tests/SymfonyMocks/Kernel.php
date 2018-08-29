@@ -4,6 +4,7 @@ namespace PHPPM\Tests\SymfonyMocks;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class Kernel
 {
@@ -69,6 +70,12 @@ class Kernel
                 return new Response('Received JSON: '.$request->getContent(), 201);
             }
         } elseif ($request->getMethod() == 'GET') {
+            if ($request->getPathInfo() == '/streamed') {
+                return new StreamedResponse(function () {
+                    echo 'streamed data';
+                }, 200);
+            }
+
             // Simple get request
             return new Response('Success', 200);
         }
