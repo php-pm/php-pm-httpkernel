@@ -22,7 +22,7 @@ jobs:
         # Unit test
         - ./vendor/bin/phpunit
         # Static analyzer check
-        - ./vendor/bin/phpstan analyze -c .phpstan.neon --level=4 --no-progress Bootstraps Bridges Laravel || true
+        - ./vendor/bin/phpstan analyze -c .phpstan.neon --level=4 --no-progress Bootstraps Bridges Laravel
         # Check the code style
         - IFS=$'\n'; COMMIT_SCA_FILES=($(git diff --name-only --diff-filter=ACMRTUXB "${TRAVIS_COMMIT_RANGE}")); unset IFS
         - ./vendor/bin/php-cs-fixer fix --config=.php_cs.php -v --dry-run --diff --stop-on-violation --using-cache=no --path-mode=intersection -- "${COMMIT_SCA_FILES[@]}"

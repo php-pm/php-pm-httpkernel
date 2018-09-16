@@ -29,6 +29,13 @@ class Laravel implements
     protected $app;
 
     /**
+     * Laravel Application->register() parameter count
+     *
+     * @var int
+     */
+    private $appRegisterParameters;
+
+    /**
      * Instantiate the bootstrap, storing the $appenv
      *
      * @param string|null $appenv The environment your application will use to bootstrap (if any)
@@ -143,6 +150,26 @@ class Laravel implements
             return;
         }
 
-        $this->app->register($providerName, [], true);
+        $this->appRegister($providerName, true);
+    }
+
+    /**
+     * Register application provider
+     * Workaround for BC break in https://github.com/laravel/framework/pull/25028
+     * @param string $providerName
+     * @param bool $force
+     */
+    protected function appRegister($providerName, $force = false)
+    {
+        if (!$this->appRegisterParameters) {
+            $method = new \ReflectionMethod(get_class($this->app), ['name' => 'register']);
+            $this->appRegisterParameters = count($method->getParameters());
+        }
+
+        if ($this->appRegisterParameters == 3) {
+            $this->app->register($providerName, [], $force);
+        } else {
+            $this->app->register($providerName, $force);
+        }
     }
 }
