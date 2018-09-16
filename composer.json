@@ -12,7 +12,11 @@
     },
     "autoload": {
         "psr-4": {
-            "PHPPM\\": "",
+            "PHPPM\\": ""
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
             "PHPPM\\Tests\\": "tests"
         }
     }
