@@ -133,11 +133,13 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
         $container = $app->getContainer();
 
         if ($container->has('doctrine')) {
-            $em = $container->get("doctrine");
-            if (!$em->getManager()->isOpen()) {
-                $em->resetManager();
-            } else {
-                $em->getManager()->clear();
+            $doctrineRegistry = $container->get("doctrine");
+            foreach ($doctrineRegistry->getManagers() as $curManagerName => $curManager) {
+                if (!$curManager->isOpen()) {
+                    $doctrineRegistry->resetManager($curManagerName);
+                } else {
+                    $curManager->clear();
+                }
             }
         }
 
