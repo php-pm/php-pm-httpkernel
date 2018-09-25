@@ -187,6 +187,10 @@ class HttpKernel implements BridgeInterface
 
         $syRequest->setMethod($method);
 
+        if ($syRequest instanceof \Illuminate\Http\Request && $syRequest->isJson()) {
+            $syRequest->request = $syRequest->json();
+        }
+
         return $syRequest;
     }
 
