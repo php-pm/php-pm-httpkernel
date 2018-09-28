@@ -162,7 +162,7 @@ class Laravel implements
     protected function appRegister($providerName, $force = false)
     {
         if (!$this->appRegisterParameters) {
-            $method = new \ReflectionMethod(get_class($this->app), ['name' => 'register']);
+            $method = new \ReflectionMethod(get_class($this->app), 'register');
             $this->appRegisterParameters = count($method->getParameters());
         }
 
