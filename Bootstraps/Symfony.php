@@ -2,6 +2,7 @@
 
 namespace PHPPM\Bootstraps;
 
+use PHPPM\ProcessSlave;
 use PHPPM\Symfony\StrongerNativeSessionStorage;
 use PHPPM\Utils;
 use Symfony\Component\HttpFoundation\Request;
@@ -85,6 +86,29 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
             }
 
             $app->booted = true;
+        }, $app);
+
+        Utils::bindAndCall(function () use ($app) {
+            $container = $app->container;
+
+            $containerClassName = substr(strrchr(get_class($app->container), "\\"), 1);
+            $metaName = $containerClassName . '.php.meta';
+
+            Utils::bindAndCall(function () use ($container) {
+                $container->publicContainerDir = $container->containerDir;
+            }, $container);
+
+            $metaContent = file_get_contents($app->container->publicContainerDir . '/../' . $metaName);
+
+            $containerMetadata = unserialize($metaContent);
+
+            $files = [];
+            foreach ($containerMetadata as $entry) {
+                $fileResourceClass = 'Symfony\Component\Config\Resource\FileResource';
+                if ($entry instanceof $fileResourceClass) {
+                    ProcessSlave::$slave->registerFile($entry->__toString());
+                }
+            }
         }, $app);
 
         if ($trustedProxies = getenv('TRUSTED_PROXIES')) {
