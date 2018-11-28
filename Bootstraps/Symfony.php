@@ -4,6 +4,8 @@ namespace PHPPM\Bootstraps;
 
 use PHPPM\Symfony\StrongerNativeSessionStorage;
 use PHPPM\Utils;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\HttpFoundation\Request;
 use function PHPPM\register_file;
 
@@ -116,8 +118,9 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
      * Does some necessary preparation before each request.
      *
      * @param \AppKernel $app
+     * @param ServerRequestInterface $request
      */
-    public function preHandle($app)
+    public function preHandle($app, ServerRequestInterface $request)
     {
         //resets Kernels startTime, so Symfony can correctly calculate the execution time
         Utils::hijackProperty($app, 'startTime', microtime(true));
@@ -127,8 +130,10 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
      * Does some necessary clean up after each request.
      *
      * @param \AppKernel $app
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
      */
-    public function postHandle($app)
+    public function postHandle($app, ServerRequestInterface $request, ResponseInterface $response)
     {
         $container = $app->getContainer();
 

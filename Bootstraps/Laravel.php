@@ -1,6 +1,8 @@
 <?php
 
 namespace PHPPM\Bootstraps;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * A default bootstrap for the Laravel framework
@@ -120,16 +122,19 @@ class Laravel implements
 
     /**
      * @param \Illuminate\Contracts\Foundation\Application $app
+     * @param ServerRequestInterface $request
      */
-    public function preHandle($app)
+    public function preHandle($app, ServerRequestInterface $request)
     {
         //reset const LARAVEL_START, to get the correct timing
     }
 
     /**
      * @param \Illuminate\Contracts\Foundation\Application $app
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
      */
-    public function postHandle($app)
+    public function postHandle($app, ServerRequestInterface $request, ResponseInterface $response)
     {
         //check if this is a lumen framework, if so, do not reset
         //note that lumen does not have the getProvider method

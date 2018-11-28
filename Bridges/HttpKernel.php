@@ -81,7 +81,7 @@ class HttpKernel implements BridgeInterface
         ob_start();
 
         if ($this->bootstrap instanceof HooksInterface) {
-            $this->bootstrap->preHandle($this->application);
+            $this->bootstrap->preHandle($this->application, $request);
         }
 
         $syResponse = $this->application->handle($syRequest);
@@ -98,7 +98,7 @@ class HttpKernel implements BridgeInterface
         }
 
         if ($this->bootstrap instanceof HooksInterface) {
-            $this->bootstrap->postHandle($this->application);
+            $this->bootstrap->postHandle($this->application, $request, $response);
         }
 
         return $response;
