@@ -150,7 +150,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
 
         //Symfony\Bundle\TwigBundle\Loader\FilesystemLoader
         //->Twig_Loader_Filesystem
-        if ($container->has('twig.loader')) {
+        if ($this->debug && $container->has('twig.loader')) {
             $twigLoader = $container->get('twig.loader');
             Utils::bindAndCall(function () use ($twigLoader) {
                 foreach ($twigLoader->cache as $path) {
