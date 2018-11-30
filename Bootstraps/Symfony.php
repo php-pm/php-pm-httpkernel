@@ -104,7 +104,6 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
                 $containerMetadata = unserialize($metaContent);
 
                 foreach ($containerMetadata as $entry) {
-                    $fileResourceClass = 'Symfony\Component\Config\Resource\FileResource';
                     if ($entry instanceof FileResource) {
                         register_file($entry->__toString());
                     }
