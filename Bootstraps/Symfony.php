@@ -99,7 +99,16 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
                     $container->publicContainerDir = $container->containerDir;
                 }, $container);
 
-                $metaContent = file_get_contents($app->container->publicContainerDir . '/../' . $metaName);
+                if ($container->publicContainerDir === null) {
+                    return;
+                }
+
+                $metaContent = @file_get_contents($app->container->publicContainerDir . '/../' . $metaName);
+
+                // Cannot read the Metadata, returning
+                if ($metaContent === false) {
+                    return;
+                }
 
                 $containerMetadata = unserialize($metaContent);
 
