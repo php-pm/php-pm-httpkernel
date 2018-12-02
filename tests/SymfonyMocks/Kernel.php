@@ -10,6 +10,8 @@ class Kernel
 {
     private $bundlesInitialized = false;
     private $containerInitialized = false;
+    private $container;
+    private $bundles;
 
     public function __construct($env, $debug)
     {
@@ -18,11 +20,13 @@ class Kernel
     public function initializeBundles()
     {
         $this->bundlesInitialized = true;
+        $this->bundles = [];
     }
 
     public function initializeContainer()
     {
         $this->containerInitialized = true;
+        $this->container = new Container();
     }
 
     public function getBundles()
@@ -31,7 +35,7 @@ class Kernel
             throw new \Exception('Bundles not initialized');
         }
 
-        return [];
+        return $this->bundles;
     }
 
     public function getContainer()
@@ -40,7 +44,7 @@ class Kernel
             throw new \Exception('Container not initialized');
         }
 
-        return new Container();
+        return $this->container;
     }
 
     public function handle(Request $request)
