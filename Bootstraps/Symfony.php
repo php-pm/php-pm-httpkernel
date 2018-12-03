@@ -5,6 +5,7 @@ namespace PHPPM\Bootstraps;
 use PHPPM\Symfony\StrongerNativeSessionStorage;
 use PHPPM\Utils;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Config\Resource\FileResource;
 use function PHPPM\register_file;
 
 /**
@@ -87,6 +88,38 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
             $app->booted = true;
         }, $app);
 
+        if ($this->debug) {
+            Utils::bindAndCall(function () use ($app) {
+                $container = $app->container;
+
+                $containerClassName = substr(strrchr(get_class($app->container), "\\"), 1);
+                $metaName = $containerClassName . '.php.meta';
+
+                Utils::bindAndCall(function () use ($container) {
+                    $container->publicContainerDir = $container->containerDir;
+                }, $container);
+
+                if ($container->publicContainerDir === null) {
+                    return;
+                }
+
+                $metaContent = @file_get_contents($app->container->publicContainerDir . '/../' . $metaName);
+
+                // Cannot read the Metadata, returning
+                if ($metaContent === false) {
+                    return;
+                }
+
+                $containerMetadata = unserialize($metaContent);
+
+                foreach ($containerMetadata as $entry) {
+                    if ($entry instanceof FileResource) {
+                        register_file($entry->__toString());
+                    }
+                }
+            }, $app);
+        }
+
         if ($trustedProxies = getenv('TRUSTED_PROXIES')) {
             Request::setTrustedProxies(explode(',', $trustedProxies), Request::HEADER_X_FORWARDED_ALL ^ Request::HEADER_X_FORWARDED_HOST);
         }
@@ -97,7 +130,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
 
         return $app;
     }
-    
+
     /**
     * Returns the vendor directory containing autoload.php
     *
