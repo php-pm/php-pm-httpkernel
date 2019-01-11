@@ -192,6 +192,13 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
             }, $twigLoader);
         }
 
+        //reset Webpack Encore file list
+        Utils::bindAndCall(function () use ($container) {
+            if (isset($container->privates['webpack_encore.entrypoint_lookup'])) {
+                $container->privates['webpack_encore.entrypoint_lookup']->reset();
+            }
+        }, $container);
+        
         //reset all profiler stuff currently supported
         if ($container->has('profiler')) {
             $profiler = $container->get('profiler');
