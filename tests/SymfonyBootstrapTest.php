@@ -2,32 +2,42 @@
 
 namespace PHPPM\Tests;
 
+use PHPPM\ProcessSlave;
+use PHPPM\Tests\Fixtures\ProcessSlaveDouble;
 use PHPUnit\Framework\TestCase;
 use PHPPM\Bridges\HttpKernel;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\UploadedFileInterface;
+use GuzzleHttp\Psr7\ServerRequest;
+use GuzzleHttp\Psr7\UploadedFile;
+use Symfony\Component\Filesystem\Filesystem;
 
 class SymfonyBootstrapTest extends TestCase
 {
+    public function setUp()
+    {
+        ProcessSlave::$slave = new ProcessSlaveDouble();
+    }
+
+    public static function tearDownAfterClass()
+    {
+        $fs = new Filesystem();
+        $fs->remove(__DIR__.'/Fixtures/Symfony/var');
+    }
 
     /**
      * @runInSeparateProcess
      */
     public function testGetRequest()
     {
-        putenv('APP_KERNEL_NAMESPACE=PHPPM\\Tests\\SymfonyMocks\\');
+        putenv('APP_KERNEL_NAMESPACE=PHPPM\\Tests\\Fixtures\\Symfony\\');
         $bridge = new HttpKernel();
         $bridge->bootstrap('Symfony', 'test', true);
 
-        $request = $this->getMockBuilder(ServerRequestInterface::class)->getMock();
-        $request->method('getHeader')->with('Cookie')->willReturn([]);
-        $request->method('getQueryParams')->willReturn([]);
-        $request->method('getUploadedFiles')->willReturn([]);
-        $request->method('getMethod')->willReturn('GET');
+        $request = new ServerRequest('GET', '/get');
+        $_SERVER['REQUEST_URI'] = (string) $request->getUri();
 
         $response = $bridge->handle($request);
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals('Success', (string)$response->getBody());
+        $this->assertEquals('Success', (string) $response->getBody());
     }
 
     /**
@@ -35,27 +45,18 @@ class SymfonyBootstrapTest extends TestCase
      */
     public function testFileUpload()
     {
-        putenv('APP_KERNEL_NAMESPACE=PHPPM\\Tests\\SymfonyMocks\\');
+        putenv('APP_KERNEL_NAMESPACE=PHPPM\\Tests\\Fixtures\\Symfony\\');
         $bridge = new HttpKernel();
         $bridge->bootstrap('Symfony', 'test', true);
 
-        $fileOK = $this->getMockBuilder(UploadedFileInterface::class)->getMock();
-        $fileOK->method('getClientFilename')->willReturn('testOK.pdf');
-        $fileOK->method('getClientMediaType')->willReturn('pdf');
-        $fileOK->method('getSize')->willReturn(1000);
-        $fileOK->method('getError')->willReturn(UPLOAD_ERR_OK);
-
-        $fileErr = $this->getMockBuilder(UploadedFileInterface::class)->getMock();
-        $fileErr->method('getClientFilename')->willReturn('testErr.pdf');
-        $fileErr->method('getClientMediaType')->willReturn('pdf');
-        $fileErr->method('getSize')->willReturn(0);
-        $fileErr->method('getError')->willReturn(UPLOAD_ERR_NO_FILE);
-
-        $request = $this->getMockBuilder(ServerRequestInterface::class)->getMock();
-        $request->method('getHeader')->with('Cookie')->willReturn([]);
-        $request->method('getQueryParams')->willReturn([]);
-        $request->method('getUploadedFiles')->willReturn([$fileOK, $fileErr]);
-        $request->method('getMethod')->willReturn('POST');
+        $request = new ServerRequest('POST', '/upload');
+        $dummyStream = fopen('data:text/plain,dummy', 'r');
+        $uploadedFiles = [
+            new UploadedFile($dummyStream, 1000, UPLOAD_ERR_OK, 'testOK.pdf', 'pdf'),
+            new UploadedFile($dummyStream, 0, UPLOAD_ERR_NO_FILE, 'testErr.pdf', 'pdf'),
+        ];
+        $request = $request->withUploadedFiles($uploadedFiles);
+        $_SERVER['REQUEST_URI'] = (string) $request->getUri();
 
         $response = $bridge->handle($request);
         $this->assertEquals(201, $response->getStatusCode());
@@ -67,17 +68,14 @@ class SymfonyBootstrapTest extends TestCase
      */
     public function testPostJSON()
     {
-        putenv('APP_KERNEL_NAMESPACE=PHPPM\\Tests\\SymfonyMocks\\');
+        putenv('APP_KERNEL_NAMESPACE=PHPPM\\Tests\\Fixtures\\Symfony\\');
         $bridge = new HttpKernel();
         $bridge->bootstrap('Symfony', 'test', true);
 
-        $_SERVER["CONTENT_TYPE"] = 'application/json';
-        $request = $this->getMockBuilder(ServerRequestInterface::class)->getMock();
-        $request->method('getHeader')->with('Cookie')->willReturn([]);
-        $request->method('getQueryParams')->willReturn([]);
-        $request->method('getUploadedFiles')->willReturn([]);
-        $request->method('getBody')->willReturn('{"some_json_array":[{"map1":"value1"},{"map2":"value2"}]}');
-        $request->method('getMethod')->willReturn('POST');
+        $request = new ServerRequest('POST', '/json', [
+            'CONTENT_TYPE' => 'application/json',
+        ], '{"some_json_array":[{"map1":"value1"},{"map2":"value2"}]}');
+        $_SERVER['REQUEST_URI'] = (string) $request->getUri();
 
         $response = $bridge->handle($request);
         $this->assertEquals(201, $response->getStatusCode());
@@ -89,17 +87,12 @@ class SymfonyBootstrapTest extends TestCase
      */
     public function testStreamedResponse()
     {
-        putenv('APP_KERNEL_NAMESPACE=PHPPM\\Tests\\SymfonyMocks\\');
+        putenv('APP_KERNEL_NAMESPACE=PHPPM\\Tests\\Fixtures\\Symfony\\');
         $bridge = new HttpKernel();
         $bridge->bootstrap('Symfony', 'test', true);
 
-        $request = $this->getMockBuilder(ServerRequestInterface::class)->getMock();
-        $request->method('getHeader')->with('Cookie')->willReturn([]);
-        $request->method('getQueryParams')->willReturn([]);
-        $request->method('getUploadedFiles')->willReturn([]);
-        $request->method('getMethod')->willReturn('GET');
-
-        $_SERVER['REQUEST_URI'] = '/streamed';
+        $request = new ServerRequest('GET', '/streamed');
+        $_SERVER['REQUEST_URI'] = (string) $request->getUri();
 
         $response = $bridge->handle($request);
         $this->assertEquals(200, $response->getStatusCode());
