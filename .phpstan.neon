@@ -9,4 +9,4 @@ parameters:
     	- '#PHPPM.Laravel.SessionGuard#'
     	- '#Property Illuminate.Auth.SessionGuard#'
     	- '#Method Illuminate\\Foundation\\Application::register.. invoked with 3 parameters, 1-2 required.#'
-        - '#Class Symfony\WebpackEncoreBundle\Asset\EntrypointLookupInterface not found and could not be autoloaded.#'
+    	- '#Class Symfony\WebpackEncoreBundle\Asset\EntrypointLookupInterface not found and could not be autoloaded.#'
