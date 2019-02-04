@@ -195,7 +195,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
         //reset Webpack Encore file list
         Utils::bindAndCall(function () use ($container) {
             foreach ($container->privates as $id => $service) {
-                if (strpos($id, 'webpack_encore.entrypoint_lookup') === 0 && is_subclass_of($service, '\Symfony\WebpackEncoreBundle\Asset\EntrypointLookupInterface')) {
+                if (is_subclass_of($service, '\Symfony\WebpackEncoreBundle\Asset\EntrypointLookupInterface')) {
                     $service->reset();
                 }
             }
