@@ -100,6 +100,10 @@ class HttpKernel implements BridgeInterface
         if ($this->bootstrap instanceof HooksInterface) {
             $this->bootstrap->postHandle($this->application);
         }
+        
+        $request = null;
+        $syRequest = null;
+        $syResponse = null;
 
         return $response;
     }
@@ -190,6 +194,12 @@ class HttpKernel implements BridgeInterface
         if ($syRequest instanceof \Illuminate\Http\Request && $syRequest->isJson()) {
             $syRequest->request = $syRequest->json();
         }
+
+        $post = null;
+        $uploadedFiles = null;
+        $mapFiles = null;
+        $cookies = null;
+        $query = null;
 
         return $syRequest;
     }
