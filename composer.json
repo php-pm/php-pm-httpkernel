@@ -2,14 +2,15 @@
     "name": "php-pm/httpkernel-adapter",
     "license": "MIT",
     "require": {
-        "php-pm/php-pm": "^2.0",
+        "php-pm/php-pm": "dev-master",
         "symfony/http-foundation": "^3.4|^4.0",
         "symfony/http-kernel": "^3.4|^4.0",
         "guzzlehttp/psr7": "^1.5"
     },
     "require-dev": {
         "phpunit/phpunit": "^7.0",
-        "symfony/framework-bundle": "^3.4|^4",
+        "symfony/framework-bundle": "^3.4|^4.0",
+        "symfony/yaml": "^3.4|^4.0",
         "doctrine/annotations": "^1.6"
     },
     "autoload": {
