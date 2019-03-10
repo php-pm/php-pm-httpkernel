@@ -66,7 +66,7 @@ class HttpKernel implements BridgeInterface
     /**
      * {@inheritdoc}
      */
-    public function handle(ServerRequestInterface $request)
+    public function handle(ServerRequestInterface $request): ResponseInterface
     {
         if (null === $this->application) {
             // internal server error
