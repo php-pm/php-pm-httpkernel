@@ -312,6 +312,12 @@ class HttpKernel implements BridgeInterface
             }
         }
 
+        $headers = null;
+        $cookies = null;
+        $nativeHeaders = null;
+        $content = null;
+        $stdout = null;
+
         return $psrResponse;
     }
 
