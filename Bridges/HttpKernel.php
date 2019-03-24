@@ -138,39 +138,7 @@ class HttpKernel implements BridgeInterface
         /** @var \React\Http\Io\UploadedFile $file */
         $uploadedFiles = $psrRequest->getUploadedFiles();
 
-        $mapFiles = function (&$files) use (&$mapFiles) {
-            foreach ($files as &$file) {
-                if (is_array($file)) {
-                    $mapFiles($file);
-                } elseif ($file instanceof UploadedFileInterface) {
-                    $tmpname = tempnam(sys_get_temp_dir(), 'upload');
-                    $this->tempFiles[] = $tmpname;
-
-                    if (UPLOAD_ERR_NO_FILE == $file->getError()) {
-                        $file = [
-                            'error' => $file->getError(),
-                            'name' => $file->getClientFilename(),
-                            'size' => $file->getSize(),
-                            'tmp_name' => $tmpname,
-                            'type' => $file->getClientMediaType()
-                        ];
-                    } else {
-                        if (UPLOAD_ERR_OK == $file->getError()) {
-                            file_put_contents($tmpname, (string)$file->getStream());
-                        }
-                        $file = new SymfonyFile(
-                            $tmpname,
-                            $file->getClientFilename(),
-                            $file->getClientMediaType(),
-                            $file->getSize(),
-                            $file->getError(),
-                            true
-                        );
-                    }
-                }
-            }
-        };
-        $mapFiles($uploadedFiles);
+        $this->mapFiles($uploadedFiles);
 
         // @todo check howto handle additional headers
         // @todo check howto support other HTTP methods with bodies
@@ -192,6 +160,40 @@ class HttpKernel implements BridgeInterface
         }
 
         return $syRequest;
+    }
+
+    private function mapFiles(&$files)
+    {
+        foreach ($files as &$file) {
+            if (is_array($file)) {
+                $this->mapFiles($file);
+            } elseif ($file instanceof UploadedFileInterface) {
+                $tmpname = tempnam(sys_get_temp_dir(), 'upload');
+                $this->tempFiles[] = $tmpname;
+
+                if (UPLOAD_ERR_NO_FILE == $file->getError()) {
+                    $file = [
+                        'error' => $file->getError(),
+                        'name' => $file->getClientFilename(),
+                        'size' => $file->getSize(),
+                        'tmp_name' => $tmpname,
+                        'type' => $file->getClientMediaType(),
+                    ];
+                } else {
+                    if (UPLOAD_ERR_OK == $file->getError()) {
+                        file_put_contents($tmpname, (string)$file->getStream());
+                    }
+                    $file = new SymfonyFile(
+                        $tmpname,
+                        $file->getClientFilename(),
+                        $file->getClientMediaType(),
+                        $file->getSize(),
+                        $file->getError(),
+                        true
+                    );
+                }
+            }
+        }
     }
 
     /**
