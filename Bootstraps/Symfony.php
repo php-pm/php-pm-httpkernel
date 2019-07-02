@@ -53,7 +53,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
 
         // environment loading as of Symfony 3.3
         if (!getenv('APP_ENV') && class_exists('Symfony\Component\Dotenv\Dotenv') && file_exists(realpath('.env'))) {
-            (new \Symfony\Component\Dotenv\Dotenv())->load(realpath('.env'));
+            (new \Symfony\Component\Dotenv\Dotenv(true))->load(realpath('.env'));
         }
 
         $namespace = getenv('APP_KERNEL_NAMESPACE') ?: '\App\\';
