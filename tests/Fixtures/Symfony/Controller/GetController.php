@@ -2,11 +2,10 @@
 
 namespace PHPPM\Tests\Fixtures\Symfony\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class GetController extends Controller
+class GetController
 {
     /**
      * @Route("/get")

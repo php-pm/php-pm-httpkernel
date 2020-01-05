@@ -2,12 +2,11 @@
 
 namespace PHPPM\Tests\Fixtures\Symfony\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class PostJsonController extends Controller
+class PostJsonController
 {
     /**
      * @Route("/json", methods={"POST"})
