@@ -6,6 +6,7 @@ use PHPPM\Symfony\StrongerNativeSessionStorage;
 use PHPPM\Utils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Config\Resource\FileResource;
+use Symfony\Contracts\Service\ResetInterface;
 use function PHPPM\register_file;
 
 /**
@@ -167,11 +168,13 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
 
         if ($container->has('doctrine')) {
             $doctrineRegistry = $container->get("doctrine");
-            foreach ($doctrineRegistry->getManagers() as $curManagerName => $curManager) {
-                if (!$curManager->isOpen()) {
-                    $doctrineRegistry->resetManager($curManagerName);
-                } else {
-                    $curManager->clear();
+            if (!$doctrineRegistry instanceof ResetInterface) {
+                foreach ($doctrineRegistry->getManagers() as $curManagerName => $curManager) {
+                    if (!$curManager->isOpen()) {
+                        $doctrineRegistry->resetManager($curManagerName);
+                    } else {
+                        $curManager->clear();
+                    }
                 }
             }
         }
@@ -198,7 +201,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
                 $container->privates['webpack_encore.entrypoint_lookup']->reset();
             }
         }, $container);
-        
+
         //reset all profiler stuff currently supported
         if ($container->has('profiler')) {
             $profiler = $container->get('profiler');
