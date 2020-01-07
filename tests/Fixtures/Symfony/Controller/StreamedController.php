@@ -2,11 +2,10 @@
 
 namespace PHPPM\Tests\Fixtures\Symfony\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
-class StreamedController extends Controller
+class StreamedController
 {
     /**
      * @Route("/streamed")
