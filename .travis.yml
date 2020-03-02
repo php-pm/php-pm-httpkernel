@@ -17,7 +17,7 @@ jobs:
         - rm -f ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/xdebug.ini
         - composer require "phpstan/phpstan" "friendsofphp/php-cs-fixer:^2.8"
         # dependencies for phpstan
-        - composer require --dev "symfony/symfony" "laravel/framework" "drupal/drupal"
+        - composer require --dev "symfony/symfony" "laravel/framework"
       script:
         # Unit test
         - ./vendor/bin/phpunit
