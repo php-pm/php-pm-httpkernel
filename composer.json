@@ -1,5 +1,6 @@
 {
     "name": "php-pm/httpkernel-adapter",
+    "description": "PHP-PM adapter for Symfony HTTPKernel.",
     "license": "MIT",
     "require": {
         "php-pm/php-pm": "^2.0",
