@@ -12,6 +12,10 @@ services:
   PHPPM\Tests\Fixtures\Symfony\Controller\:
     resource: '../Controller/*'
     tags: ['controller.service_arguments']
+  # override the default symfony logger
+  logger:
+    synthetic: true
+    public: true
 
 framework:
   secret: foobar
