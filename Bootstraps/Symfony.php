@@ -70,6 +70,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
 
         if ($this->debug) {
             Utils::bindAndCall(function () use ($app) {
+                $app->boot();
                 $container = $app->container;
 
                 $containerClassName = substr(strrchr(get_class($app->container), "\\"), 1);
