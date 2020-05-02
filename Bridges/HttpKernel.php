@@ -183,14 +183,27 @@ class HttpKernel implements BridgeInterface
                     if (UPLOAD_ERR_OK == $file->getError()) {
                         file_put_contents($tmpname, (string)$file->getStream());
                     }
-                    $file = new SymfonyFile(
-                        $tmpname,
-                        $file->getClientFilename(),
-                        $file->getClientMediaType(),
-                        $file->getSize(),
-                        $file->getError(),
-                        true
-                    );
+                    $class = new \ReflectionClass(SymfonyFile::class);
+                    if (count($class->getConstructor()->getParameters()) === 6) {
+                        // Symfony < v4.1
+                        $file = new SymfonyFile(
+                            $tmpname,
+                            $file->getClientFilename(),
+                            $file->getClientMediaType(),
+                            $file->getSize(),
+                            $file->getError(),
+                            true
+                        );
+                    } else {
+                        $file = new SymfonyFile(
+                            $tmpname,
+                            $file->getClientFilename(),
+                            $file->getClientMediaType(),
+                            $file->getError(),
+                            true
+                        );
+                    }
+
                 }
             }
         }
