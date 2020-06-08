@@ -16,7 +16,7 @@
     },
     "autoload": {
         "psr-4": {
-            "PHPPM\\": ""
+            "PHPPM\\": "src"
         }
     },
     "autoload-dev": {
