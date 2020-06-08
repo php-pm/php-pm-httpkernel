@@ -8,6 +8,7 @@ use Symfony\Component\Config\Resource\FileResource;
 use Symfony\Contracts\Service\ResetInterface;
 use function PHPPM\register_file;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\Dotenv\Dotenv;
 
 /**
  * A default bootstrap for the Symfony framework
@@ -53,8 +54,13 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
         }
 
         // environment loading as of Symfony 3.3
-        if (!getenv('APP_ENV') && class_exists('Symfony\Component\Dotenv\Dotenv') && file_exists(realpath('.env'))) {
-            (new \Symfony\Component\Dotenv\Dotenv(true))->load(realpath('.env'));
+        if (!getenv('APP_ENV') && class_exists(Dotenv::class) && file_exists(realpath('.env'))) {
+            //Symfony >=5.1 compatibility
+            if (method_exists(Dotenv::class, 'usePutenv')) {
+                (new Dotenv())->usePutenv()->load(realpath('.env'));
+            } else {
+                (new Dotenv(true))->load(realpath('.env'));
+            }
         }
 
         $namespace = getenv('APP_KERNEL_NAMESPACE') ?: '\App\\';
