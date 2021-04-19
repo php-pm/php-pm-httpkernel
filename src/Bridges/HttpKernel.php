@@ -150,6 +150,8 @@ class HttpKernel implements BridgeInterface
             $class = SymfonyRequest::class;
         }
 
+        $_SERVER['SERVER_PROTOCOL'] = $psrRequest->getProtocolVersion();
+
         /** @var SymfonyRequest $syRequest */
         $syRequest = new $class($query, $post, $attributes = [], $_COOKIE, $uploadedFiles, $_SERVER, (string)$psrRequest->getBody());
 

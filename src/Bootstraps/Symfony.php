@@ -163,6 +163,15 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
             }
         }
 
+        if ($container->has('doctrine_mongodb')) {
+            $doctrineRegistry = $container->get('doctrine_mongodb');
+            if (null !== $doctrineRegistry) {
+                foreach ($doctrineRegistry->getManagers() as $objectManager) {
+                    $objectManager->clear();
+                }
+            }
+        }
+
         //Symfony\Bundle\TwigBundle\Loader\FilesystemLoader
         //->Twig_Loader_Filesystem
         if ($this->debug && $container->has('twig.loader')) {
