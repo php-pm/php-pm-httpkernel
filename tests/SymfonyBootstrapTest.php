@@ -12,12 +12,12 @@ use Symfony\Component\Filesystem\Filesystem;
 
 class SymfonyBootstrapTest extends TestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         ProcessSlave::$slave = new ProcessSlaveDouble();
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         $fs = new Filesystem();
         $fs->remove(__DIR__.'/Fixtures/Symfony/var');

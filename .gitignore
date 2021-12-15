@@ -1,5 +1,7 @@
+/.idea/
 /vendor/
 composer.lock
 tests/Fixtures/Symfony/cache
 tests/Fixtures/Symfony/logs
 tests/Fixtures/Symfony/var
+.phpunit.result.cache
