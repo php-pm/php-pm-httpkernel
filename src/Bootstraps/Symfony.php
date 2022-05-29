@@ -108,7 +108,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
         }
 
         if ($trustedProxies = getenv('TRUSTED_PROXIES')) {
-            Request::setTrustedProxies(explode(',', $trustedProxies), Request::HEADER_X_FORWARDED_ALL ^ Request::HEADER_X_FORWARDED_HOST);
+            Request::setTrustedProxies(explode(',', $trustedProxies), Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_PORT | Request::HEADER_X_FORWARDED_PROTO);
         }
 
         if ($trustedHosts = getenv('TRUSTED_HOSTS')) {
