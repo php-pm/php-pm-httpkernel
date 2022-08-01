@@ -308,8 +308,8 @@ class HttpKernel implements BridgeInterface
         if (!isset($headers['Content-Length'])) {
             $psrResponse = $psrResponse->withAddedHeader('Content-Length', strlen($content));
         }
-
-        $psrResponse = $psrResponse->withBody(Psr7\stream_for($content));
+        $body = class_exists('\GuzzleHttp\Psr7\Utils') ? Psr7\Utils::streamFor($content) : Psr7\stream_for($content);
+        $psrResponse = $psrResponse->withBody($body);
 
         foreach ($this->tempFiles as $tmpname) {
             if (file_exists($tmpname)) {
