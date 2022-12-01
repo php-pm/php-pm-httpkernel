@@ -54,7 +54,7 @@ class Symfony implements BootstrapInterface, HooksInterface, ApplicationEnvironm
         }
 
         // environment loading as of Symfony 3.3
-        if (!getenv('APP_ENV') && class_exists(Dotenv::class) && file_exists(realpath('.env'))) {
+        if (class_exists(Dotenv::class) && file_exists(realpath('.env'))) {
             //Symfony >=5.1 compatibility
             if (method_exists(Dotenv::class, 'usePutenv')) {
                 (new Dotenv())->usePutenv()->bootEnv(realpath('.env'));
