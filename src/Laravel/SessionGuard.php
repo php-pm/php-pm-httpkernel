@@ -9,45 +9,22 @@ use Illuminate\Contracts\Session\Session;
 
 class SessionGuard extends \Illuminate\Auth\SessionGuard
 {
+    protected Application $app;
 
-    /**
-     * App instance
-     *
-     * @var mixed|\Illuminate\Foundation\Application $app
-     */
-    protected $app;
-
-    /**
-     * Create a new authentication guard.
-     *
-     * @param  string  $name
-     * @param  \Illuminate\Contracts\Auth\UserProvider   $provider
-     * @param  \Illuminate\Contracts\Session\Session     $session
-     * @param  \Symfony\Component\HttpFoundation\Request $request
-     * @param  \Illuminate\Foundation\Application  $app
-     * @return void
-     */
     public function __construct(
-        $name,
+        public readonly string $name,
         UserProvider $provider,
         Session $session,
         Request $request = null,
         Application $app
     ) {
-        $this->name = $name;
         $this->session = $session;
         $this->request = $request;
         $this->provider = $provider;
         $this->app = $app;
     }
 
-    /**
-     * Set the current request instance.
-     *
-     * @param  \Symfony\Component\HttpFoundation\Request  $request
-     * @return $this
-     */
-    public function setRequest(Request $request)
+    public function setRequest(Request $request): self
     {
         // reset the current state
         $this->reset();
@@ -57,33 +34,18 @@ class SessionGuard extends \Illuminate\Auth\SessionGuard
 
         return parent::setRequest($request);
     }
-    
-    /**
-     * Get a unique identifier for the auth session value.
-     *
-     * @return string
-     */
-    public function getName()
+
+    public function getName(): string
     {
         return 'login_'.$this->name.'_'.sha1(parent::class);
     }
 
-    /**
-     * Get the name of the cookie used to store the "recaller".
-     *
-     * @return string
-     */
-    public function getRecallerName()
+    public function getRecallerName(): string
     {
         return 'remember_'.$this->name.'_'.sha1(parent::class);
     }
-    
-    /**
-     * Reset the state of current class instance.
-     *
-     * @return void
-     */
-    protected function reset()
+
+    protected function reset(): void
     {
         $this->user = null;
         $this->lastAttempted = null;
