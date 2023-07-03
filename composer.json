@@ -3,13 +3,14 @@
     "description": "PHP-PM adapter for Symfony HTTPKernel.",
     "license": "MIT",
     "require": {
+        "php": "^8.1|^8.2",
         "php-pm/php-pm": "^2.0",
         "symfony/http-foundation": "^4.2.12|^5.0.4|^6.0",
         "symfony/http-kernel": "^4.0|^5.1.5|^6.0",
         "guzzlehttp/psr7": "^1.5|^2.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.5",
+        "phpunit/phpunit": "^9.5|^10.2",
         "symfony/framework-bundle": "^4.1.12|^5.0|^6.0",
         "symfony/yaml": "^4.0|^5.0|^6.0",
         "doctrine/annotations": "^1.6"
